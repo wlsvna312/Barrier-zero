@@ -1,0 +1,1234 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>약손 소프트웨어 MVP</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --panel: #ffffff;
+      --text: #172033;
+      --muted: #65708a;
+      --line: #dfe5ef;
+      --primary: #3157d5;
+      --primary-soft: #eaf0ff;
+      --success: #16794a;
+      --success-soft: #e8f6ef;
+      --warning: #a46600;
+      --warning-soft: #fff4d8;
+      --danger: #b72e3d;
+      --danger-soft: #fdebed;
+      --shadow: 0 12px 30px rgba(29, 48, 91, 0.08);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, Pretendard, "Noto Sans KR", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+
+    .app-shell {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 250px 1fr;
+    }
+
+    aside {
+      background: #16213f;
+      color: #fff;
+      padding: 28px 18px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+    }
+
+    .brand {
+      padding: 0 10px 24px;
+      border-bottom: 1px solid rgba(255,255,255,.12);
+      margin-bottom: 18px;
+    }
+
+    .brand h1 { margin: 0 0 5px; font-size: 26px; }
+    .brand p { margin: 0; color: #b8c3e1; font-size: 13px; line-height: 1.5; }
+
+    .nav-btn {
+      width: 100%;
+      border: 0;
+      border-radius: 12px;
+      padding: 13px 14px;
+      margin: 5px 0;
+      text-align: left;
+      color: #d8e1fa;
+      background: transparent;
+    }
+
+    .nav-btn:hover, .nav-btn.active {
+      background: rgba(255,255,255,.12);
+      color: #fff;
+    }
+
+    .side-note {
+      position: absolute;
+      left: 18px;
+      right: 18px;
+      bottom: 20px;
+      color: #9eacd2;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    main { padding: 26px; }
+    .page { display: none; }
+    .page.active { display: block; }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .topbar h2 { margin: 0 0 6px; font-size: 28px; }
+    .topbar p { margin: 0; color: var(--muted); }
+
+    .clock {
+      text-align: right;
+      padding: 10px 14px;
+      border-radius: 12px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      min-width: 170px;
+    }
+    .clock strong { display: block; font-size: 19px; }
+    .clock span { color: var(--muted); font-size: 12px; }
+
+    .grid-2 { display: grid; grid-template-columns: 1.25fr .75fr; gap: 18px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow);
+    }
+
+    .card h3 { margin: 0 0 14px; font-size: 18px; }
+    .card h4 { margin: 18px 0 10px; }
+    .muted { color: var(--muted); }
+    .small { font-size: 12px; }
+
+    .status-panel {
+      padding: 24px;
+      border-radius: 18px;
+      background: linear-gradient(145deg, #1e2f63, #3157d5);
+      color: #fff;
+      min-height: 245px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .status-panel .eyebrow { color: #cbd6ff; font-size: 13px; }
+    .status-panel .big-status { font-size: 34px; font-weight: 800; margin: 6px 0; }
+    .status-panel .status-detail { color: #d9e1ff; }
+
+    .status-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+
+    .btn {
+      border: 0;
+      border-radius: 12px;
+      padding: 11px 15px;
+      font-weight: 700;
+      transition: .15s ease;
+    }
+    .btn:hover { transform: translateY(-1px); }
+    .btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-light { background: #fff; color: #203161; }
+    .btn-soft { background: var(--primary-soft); color: var(--primary); }
+    .btn-success { background: var(--success); color: #fff; }
+    .btn-warning { background: var(--warning-soft); color: var(--warning); }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-outline { background: transparent; color: var(--text); border: 1px solid var(--line); }
+
+    .kpi {
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fff;
+    }
+    .kpi .label { color: var(--muted); font-size: 12px; }
+    .kpi .value { font-size: 26px; font-weight: 800; margin-top: 4px; }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 5px 9px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .badge-normal { color: var(--success); background: var(--success-soft); }
+    .badge-caution { color: var(--warning); background: var(--warning-soft); }
+    .badge-risk { color: var(--danger); background: var(--danger-soft); }
+    .badge-info { color: var(--primary); background: var(--primary-soft); }
+    .badge-muted { color: #5f6b84; background: #eef1f6; }
+
+    .timeline { display: grid; gap: 10px; }
+    .timeline-row {
+      display: grid;
+      grid-template-columns: 70px 1fr auto;
+      gap: 10px;
+      align-items: center;
+      padding: 11px 12px;
+      background: #f8faff;
+      border-radius: 12px;
+      border: 1px solid #edf1f8;
+    }
+    .timeline-row.done { background: var(--success-soft); }
+    .timeline-row.alert { background: var(--warning-soft); }
+    .timeline-row.danger { background: var(--danger-soft); }
+
+    .progress {
+      height: 10px;
+      background: #e8ecf4;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .progress > span {
+      display: block;
+      height: 100%;
+      width: 0;
+      background: var(--primary);
+      transition: width .3s ease;
+    }
+
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 11px 10px; border-bottom: 1px solid var(--line); text-align: left; font-size: 13px; }
+    th { color: var(--muted); font-weight: 700; background: #fafbfe; }
+
+    .log-list {
+      display: grid;
+      gap: 9px;
+      max-height: 360px;
+      overflow: auto;
+    }
+    .log-item {
+      padding: 11px 12px;
+      border-radius: 12px;
+      background: #f8faff;
+      border-left: 4px solid #aab7d6;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+    .log-item.success { border-left-color: var(--success); }
+    .log-item.warning { border-left-color: var(--warning); }
+    .log-item.danger { border-left-color: var(--danger); }
+    .log-item.info { border-left-color: var(--primary); }
+    .log-time { color: var(--muted); font-size: 11px; margin-bottom: 3px; }
+
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .field { display: grid; gap: 7px; }
+    .field label { font-weight: 700; font-size: 13px; }
+    .field input, .field select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px 11px;
+      background: #fff;
+      color: var(--text);
+    }
+
+    .checklist { display: grid; gap: 12px; }
+    .check-row {
+      display: grid;
+      grid-template-columns: 230px 1fr;
+      gap: 12px;
+      align-items: start;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+    }
+    .check-row strong { font-size: 14px; }
+    .check-row small { color: var(--muted); display: block; margin-top: 5px; line-height: 1.45; }
+
+    .risk-score {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+    .score-circle {
+      width: 112px;
+      height: 112px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: conic-gradient(var(--primary) 0deg, #e8ecf4 0deg);
+      position: relative;
+      flex: 0 0 auto;
+    }
+    .score-circle::after {
+      content: "";
+      width: 84px;
+      height: 84px;
+      background: #fff;
+      border-radius: 50%;
+      position: absolute;
+    }
+    .score-circle span {
+      position: relative;
+      z-index: 1;
+      font-weight: 800;
+      font-size: 26px;
+    }
+
+    .metric-row {
+      display: grid;
+      grid-template-columns: 120px 1fr 56px;
+      align-items: center;
+      gap: 10px;
+      margin: 11px 0;
+    }
+    .metric-row .bar { height: 9px; background: #edf0f6; border-radius: 999px; overflow: hidden; }
+    .metric-row .bar span { display: block; height: 100%; background: var(--primary); }
+
+    .test-buttons { display: flex; flex-wrap: wrap; gap: 9px; }
+    .notice {
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: var(--primary-soft);
+      color: #2948a9;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .footer-actions { display: flex; gap: 9px; flex-wrap: wrap; margin-top: 16px; }
+
+    @media (max-width: 960px) {
+      .app-shell { grid-template-columns: 1fr; }
+      aside { position: static; height: auto; }
+      .side-note { display: none; }
+      .nav { display: flex; overflow-x: auto; gap: 6px; }
+      .nav-btn { min-width: max-content; width: auto; }
+      main { padding: 18px; }
+      .grid-2, .grid-3, .grid-4, .form-grid { grid-template-columns: 1fr; }
+      .check-row { grid-template-columns: 1fr; }
+      .topbar { flex-direction: column; }
+      .clock { text-align: left; }
+    }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+  <aside>
+    <div class="brand">
+      <h1>약손</h1>
+      <p>고령자 복약관리 소프트웨어 MVP</p>
+    </div>
+    <div class="nav">
+      <button class="nav-btn active" data-page="userPage">사용자 화면</button>
+      <button class="nav-btn" data-page="guardianPage">보호자 화면</button>
+      <button class="nav-btn" data-page="riskPage">이상징후 분석</button>
+      <button class="nav-btn" data-page="settingsPage">설정·체크리스트</button>
+      <button class="nav-btn" data-page="testPage">테스트 센터</button>
+    </div>
+    <div class="side-note">단일 HTML 파일로 동작하며 입력값은 브라우저에 자동 저장됩니다.</div>
+  </aside>
+
+  <main>
+    <section id="userPage" class="page active">
+      <div class="topbar">
+        <div>
+          <h2>하드웨어 알고리즘 구현</h2>
+          <p>복약 시간 도달부터 약포지 자동 배출, 센서 기반 수령 확인까지의 흐름을 시뮬레이션합니다.</p>
+        </div>
+        <div class="clock"><strong id="clockText">--:--:--</strong><span id="dateText">----</span></div>
+      </div>
+
+      <div class="grid-2">
+        <div class="status-panel">
+          <div>
+            <div class="eyebrow">현재 복약 회차</div>
+            <div class="big-status" id="userStatusText">복약 예정</div>
+            <div class="status-detail" id="userStatusDetail">데모 회차를 시작하면 약포지 자동 배출과 수령 확인 시뮬레이션이 시작됩니다.</div>
+          </div>
+          <div>
+            <div class="progress"><span id="sessionProgress"></span></div>
+            <div class="status-actions">
+              <button class="btn btn-light" id="startSessionBtn">데모 회차 시작</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>복약 회차 정보</h3>
+          <div class="grid-2" style="grid-template-columns:1fr 1fr; gap:10px;">
+            <div class="kpi"><div class="label">경과시간</div><div class="value" id="elapsedValue">0분</div></div>
+            <div class="kpi"><div class="label">현재 단계</div><div class="value" id="stageValue" style="font-size:20px;">대기</div></div>
+          </div>
+          <h4>시간 빠르게 이동</h4>
+          <div class="test-buttons">
+            <button class="btn btn-soft quick-time" data-minute="10">10분 경과</button>
+            <button class="btn btn-soft quick-time" data-minute="20">20분 경과</button>
+            <button class="btn btn-warning quick-time" data-minute="30">30분 경과</button>
+            <button class="btn btn-danger quick-time" data-minute="60">60분 경과</button>
+          </div>
+          <div class="notice" style="margin-top:14px;">정시 기준 20분, 미수령 기준 60분은 설정 화면에서 바꿀 수 있습니다.</div>
+        </div>
+      </div>
+
+      <div class="grid-2" style="margin-top:18px;">
+        <div class="card">
+          <h3>단계별 알림</h3>
+          <div id="notificationTimeline" class="timeline"></div>
+        </div>
+        <div class="card">
+          <h3>실시간 이벤트 로그</h3>
+          <div id="userLogs" class="log-list"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="guardianPage" class="page">
+      <div class="topbar">
+        <div>
+          <h2>보호자 화면</h2>
+          <p>오늘 복약 현황과 미수령·오류·이상징후 알림을 한곳에서 확인합니다.</p>
+        </div>
+      </div>
+
+      <div class="grid-4">
+        <div class="kpi"><div class="label">정시 수령</div><div class="value" id="guardianOnTime">0</div></div>
+        <div class="kpi"><div class="label">지연 수령</div><div class="value" id="guardianLate">0</div></div>
+        <div class="kpi"><div class="label">미수령</div><div class="value" id="guardianMissed">0</div></div>
+        <div class="kpi"><div class="label">오류</div><div class="value" id="guardianErrors">0</div></div>
+      </div>
+
+      <div class="grid-2" style="margin-top:18px;">
+        <div class="card">
+          <h3>오늘의 복약 기록</h3>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>회차</th><th>상태</th><th>반응시간</th><th>기록 시각</th></tr></thead>
+              <tbody id="doseTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <h3>보호자 알림함</h3>
+          <div id="guardianLogs" class="log-list"></div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:18px;">
+        <h3>재배출 승인</h3>
+        <p class="muted small">기기 오류로 배출에 실패했을 때만 보호자 승인 후 1회 재배출할 수 있습니다.</p>
+        <div id="approvalPanel" class="notice">현재 승인 대기 중인 요청이 없습니다.</div>
+        <div class="footer-actions">
+          <button class="btn btn-success" id="approveRetryBtn" disabled>재배출 1회 승인</button>
+          <button class="btn btn-outline" id="rejectRetryBtn" disabled>거절</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="riskPage" class="page">
+      <div class="topbar">
+        <div>
+          <h2>개인별 행동 이상징후 분석</h2>
+          <p>최근 7일 슬라이딩 윈도우와 Z-score로 오늘의 복약 행동 변화를 계산합니다.</p>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3>오늘 행동지표</h3>
+          <div class="form-grid">
+            <div class="field"><label>평균 반응 지연 L (분)</label><input id="todayL" type="number" min="0" step="0.1" value="7"></div>
+            <div class="field"><label>미수령률 N (0~1)</label><input id="todayN" type="number" min="0" max="1" step="0.01" value="0"></div>
+            <div class="field"><label>불규칙성 I (분)</label><input id="todayI" type="number" min="0" step="0.1" value="3"></div>
+            <div class="field"><label>고정 취약도 V</label><input id="riskV" type="number" min="0" max="100" step="0.1" value="0" readonly></div>
+          </div>
+          <div class="footer-actions">
+            <button class="btn btn-primary" id="calculateRiskBtn">점수 계산</button>
+            <button class="btn btn-soft scenario-btn" data-scenario="normal">정상 예시</button>
+            <button class="btn btn-warning scenario-btn" data-scenario="caution">주의 예시</button>
+            <button class="btn btn-danger scenario-btn" data-scenario="risk">위험 예시</button>
+          </div>
+          <div class="notice" style="margin-top:14px;">MVP 기준: 0~39 평소 범위, 40~69 주의 관찰, 70~100 보호자 확인 필요</div>
+        </div>
+
+        <div class="card">
+          <h3>분석 결과</h3>
+          <div class="risk-score">
+            <div class="score-circle" id="scoreCircle"><span id="finalScore">0</span></div>
+            <div>
+              <div id="riskBadge" class="badge badge-normal">평소 범위</div>
+              <h3 id="riskSummary" style="margin:10px 0 6px;">평소 복약 행동 범위입니다.</h3>
+              <div class="muted small" id="riskDetail">지표를 입력한 뒤 점수를 계산하세요.</div>
+            </div>
+          </div>
+          <div style="margin-top:18px;">
+            <div class="metric-row"><span>반응 지연</span><div class="bar"><span id="barL" style="width:0%"></span></div><strong id="scoreL">0</strong></div>
+            <div class="metric-row"><span>미수령</span><div class="bar"><span id="barN" style="width:0%"></span></div><strong id="scoreN">0</strong></div>
+            <div class="metric-row"><span>불규칙성</span><div class="bar"><span id="barI" style="width:0%"></span></div><strong id="scoreI">0</strong></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:18px;">
+        <h3>최근 7일 기준선 데이터</h3>
+        <p class="muted small">각 칸을 직접 수정할 수 있습니다. 미수령률은 0~1 사이 값입니다.</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>날짜</th><th>반응 지연 L</th><th>미수령률 N</th><th>불규칙성 I</th></tr></thead>
+            <tbody id="baselineTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="settingsPage" class="page">
+      <div class="topbar">
+        <div>
+          <h2>설정 및 고정지표 체크리스트</h2>
+          <p>점수가 높을수록 복약관리 취약성이 큰 것으로 계산합니다.</p>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3>복약 판정 설정</h3>
+          <div class="form-grid">
+            <div class="field"><label>정시 수령 기준(분)</label><input id="onTimeLimit" type="number" min="1" max="59" value="20"></div>
+            <div class="field"><label>미수령 기준(분)</label><input id="missedLimit" type="number" min="2" max="180" value="60"></div>
+          </div>
+          <div class="footer-actions"><button class="btn btn-primary" id="saveLimitsBtn">기준 저장</button></div>
+        </div>
+
+        <div class="card">
+          <h3>고정 취약도</h3>
+          <div class="kpi"><div class="label">현재 V 점수</div><div class="value" id="vScoreDisplay">0.0</div></div>
+          <p class="muted small">최종 이상징후 점수에 최대 25%의 보정으로 반영됩니다.</p>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:18px;">
+        <h3>고정지표 체크리스트</h3>
+        <div id="checklistContainer" class="checklist"></div>
+        <div class="footer-actions"><button class="btn btn-primary" id="saveChecklistBtn">체크리스트 저장 및 V 계산</button></div>
+      </div>
+    </section>
+
+    <section id="testPage" class="page">
+      <div class="topbar">
+        <div>
+          <h2>테스트 센터</h2>
+          <p>하드웨어 없이 오류 이벤트와 핵심 시나리오를 시뮬레이션합니다.</p>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3>복약 시나리오</h3>
+          <div class="test-buttons">
+            <button class="btn btn-success" id="scenarioOnTimeBtn">정시 수령</button>
+            <button class="btn btn-warning" id="scenarioLateBtn">지연 수령</button>
+            <button class="btn btn-danger" id="scenarioMissedBtn">미수령</button>
+            <button class="btn btn-outline" id="scenarioDuplicateBtn">중복 배출 요청</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>약포지 이송·절단 오류</h3>
+          <div class="field">
+            <label>오류 유형</label>
+            <select id="hardwareErrorType">
+              <option value="NO_FEED">미이송</option>
+              <option value="SLIP">미끄러짐</option>
+              <option value="OVERFEED">과이송</option>
+              <option value="LINE_NOT_FOUND">절취선 미검출</option>
+              <option value="DOUBLE_LINE">이중 절취선 감지</option>
+              <option value="CUT_FAILURE">절단 실패</option>
+              <option value="OUTLET_JAM">배출구 걸림</option>
+            </select>
+          </div>
+          <div class="footer-actions">
+            <button class="btn btn-danger" id="triggerErrorBtn">오류 발생</button>
+            <button class="btn btn-success" id="retrySuccessBtn" disabled>자동복구 성공</button>
+            <button class="btn btn-outline" id="retryFailBtn" disabled>자동복구 실패</button>
+          </div>
+          <div id="errorStateBox" class="notice" style="margin-top:14px;">현재 오류가 없습니다.</div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:18px;">
+        <h3>데이터 관리</h3>
+        <div class="test-buttons">
+          <button class="btn btn-soft" id="exportBtn">JSON 내보내기</button>
+          <button class="btn btn-danger" id="resetBtn">전체 데이터 초기화</button>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+(() => {
+  const STORAGE_KEY = 'yaksonMvpStateV1';
+
+  const checklistDefinitions = [
+    {
+      key: 'cognitive', title: '인지 및 복약 자기관리 능력', max: 3,
+      options: [
+        '0점 · 알림을 이해하고 약을 혼자 수령·관리할 수 있음',
+        '1점 · 가끔 보호자의 설명이나 확인이 필요함',
+        '2점 · 반복적인 안내가 필요하거나 약 수령·복용을 자주 잊음',
+        '3점 · 혼자서는 복약관리가 어려워 지속적인 보호자 감독이 필요함'
+      ]
+    },
+    {
+      key: 'mobility', title: '거동 및 손 사용 능력', max: 3,
+      options: [
+        '0점 · 기기까지 이동하고 약포지를 혼자 꺼낼 수 있음',
+        '1점 · 혼자 이동할 수 있으나 거동 불편으로 시간이 오래 걸림',
+        '2점 · 이동하거나 약포지를 집을 때 보행보조기 또는 타인의 부분적인 도움이 필요함',
+        '3점 · 혼자 기기까지 이동하거나 약포지를 집어 수령하기 어려움'
+      ]
+    },
+    {
+      key: 'sensory', title: '시각·청각·의사소통 능력', max: 3,
+      options: [
+        '0점 · 음성 및 LED 알림을 모두 쉽게 인식할 수 있음',
+        '1점 · 한 종류의 알림을 인식하는 데 어려움이 있음',
+        '2점 · 보조기기를 사용하면 알림을 인식할 수 있음',
+        '3점 · 보조기기를 사용해도 알림을 인식하기 어려움'
+      ]
+    },
+    {
+      key: 'guardian', title: '보호자 접근성 및 독거 여부', max: 3,
+      options: [
+        '0점 · 동거 보호자가 지속적으로 상태를 확인할 수 있음',
+        '1점 · 보호자가 하루에 한 번 이상 방문하거나 연락할 수 있음',
+        '2점 · 보호자의 확인이 정기적으로 이루어지기 어려움',
+        '3점 · 위급 상황이 발생해도 보호자의 신속한 확인이 어려움'
+      ]
+    },
+    {
+      key: 'complexity', title: '복약 복잡도', max: 3,
+      options: [
+        '0점 · 하루 1~2회 복약하며 일정과 약 구성이 단순함',
+        '1점 · 하루 3회 이상 복약하거나 여러 종류의 약을 복용함',
+        '2점 · 시간대별 약 구성이 다르거나 복약 일정 변경이 잦음',
+        '3점 · 복약조건이 복잡하고 보호자의 확인이 필요함'
+      ]
+    },
+    {
+      key: 'age', title: '연령', max: 2,
+      options: [
+        '0점 · 65~74세',
+        '1점 · 75~84세',
+        '2점 · 85세 이상'
+      ]
+    }
+  ];
+
+  const defaultBaseline = [
+    { day: 'D-7', L: 6, N: 0.00, I: 2 },
+    { day: 'D-6', L: 7, N: 0.00, I: 3 },
+    { day: 'D-5', L: 5, N: 0.00, I: 2 },
+    { day: 'D-4', L: 8, N: 0.00, I: 4 },
+    { day: 'D-3', L: 6, N: 0.00, I: 3 },
+    { day: 'D-2', L: 7, N: 0.00, I: 2 },
+    { day: 'D-1', L: 6, N: 0.00, I: 3 }
+  ];
+
+  const defaultState = {
+    settings: { onTimeLimit: 20, missedLimit: 60 },
+    checklist: { cognitive: 0, mobility: 0, sensory: 0, guardian: 0, complexity: 0, age: 0 },
+    V: 0,
+    session: null,
+    doseRecords: [],
+    logs: [],
+    guardianLogs: [],
+    pendingApproval: null,
+    errorSimulation: null,
+    baseline: defaultBaseline,
+    riskResult: { P: 0, D: 0, scores: { L: 0, N: 0, I: 0 }, level: 'normal' }
+  };
+
+  let state = loadState();
+  let timer = null;
+
+  function clone(obj) { return JSON.parse(JSON.stringify(obj)); }
+  function loadState() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+      return saved ? { ...clone(defaultState), ...saved } : clone(defaultState);
+    } catch { return clone(defaultState); }
+  }
+  function saveState() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+
+  function nowText() {
+    return new Intl.DateTimeFormat('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }).format(new Date());
+  }
+  function dateText() {
+    return new Intl.DateTimeFormat('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' }).format(new Date());
+  }
+  function addLog(message, type = 'info', guardian = false) {
+    const item = { time: nowText(), message, type };
+    (guardian ? state.guardianLogs : state.logs).unshift(item);
+    if (guardian) state.guardianLogs = state.guardianLogs.slice(0, 60);
+    else state.logs = state.logs.slice(0, 80);
+    saveState();
+    renderLogs();
+  }
+  function addBothLogs(message, type = 'info') {
+    addLog(message, type, false);
+    addLog(message, type, true);
+  }
+
+  function sessionStatusLabel(status) {
+    const map = {
+      SCHEDULED: '복약 예정', AVAILABLE: '복약 가능', DISPENSING: '배출 진행 중',
+      DISPENSED: '약 배출 완료', RECEIVED_ON_TIME: '정시 수령', RECEIVED_LATE: '지연 수령',
+      MISSED: '미수령', ERROR: '기기 오류', RECEIVED_AFTER_MISSED: '미수령 후 수령'
+    };
+    return map[status] || status;
+  }
+
+  function startSession(autoDemo = true) {
+    const receiveMinuteOptions = [5, 13, 27, 43];
+    const plannedReceiveMinute = autoDemo
+      ? receiveMinuteOptions[Math.floor(Math.random() * receiveMinuteOptions.length)]
+      : null;
+
+    state.session = {
+      id: `DOSE_${Date.now()}`,
+      label: '현재 복약 회차',
+      status: autoDemo ? 'DISPENSING' : 'AVAILABLE',
+      elapsed: 0,
+      t0: Date.now(),
+      notifications: { t0: true, m10: false, m30: false, m60: false },
+      dispensed: false,
+      received: false,
+      retryApproved: false,
+      errorType: null,
+      plannedReceiveMinute
+    };
+
+    const sessionId = state.session.id;
+    addLog(
+      autoDemo
+        ? '복약 시간이 도달했습니다. 약포지 자동 배출을 시작합니다.'
+        : '복약 시간이 도달했습니다. 음성·LED 알림을 시작합니다.',
+      'info'
+    );
+    saveState();
+    renderAll();
+
+    if (!autoDemo) {
+      startTimer();
+      return;
+    }
+
+    setTimeout(() => {
+      if (!state.session || state.session.id !== sessionId) return;
+      state.session.status = 'DISPENSED';
+      state.session.dispensed = true;
+      addLog('약포지 배출이 완료되었습니다. 수령 센서 감지를 기다립니다.', 'success');
+      saveState();
+      renderAll();
+
+      setTimeout(() => {
+        if (!state.session || state.session.id !== sessionId || state.session.received) return;
+        state.session.elapsed = plannedReceiveMinute;
+        processTimeRules();
+        confirmReceive();
+      }, 900);
+    }, 700);
+  }
+
+  function startTimer() {
+    if (timer) clearInterval(timer);
+    timer = setInterval(() => {
+      if (!state.session || ['RECEIVED_ON_TIME','RECEIVED_LATE','RECEIVED_AFTER_MISSED','ERROR'].includes(state.session.status)) return;
+      state.session.elapsed += 1; // 데모: 1초 = 1분
+      processTimeRules();
+      saveState();
+      renderSession();
+    }, 1000);
+  }
+
+  function setElapsed(minute) {
+    if (!state.session) startSession(false);
+    state.session.elapsed = Number(minute);
+    processTimeRules();
+    saveState();
+    renderAll();
+  }
+
+  function processTimeRules() {
+    const s = state.session;
+    if (!s) return;
+    if (s.elapsed >= 10 && !s.notifications.m10 && !s.received) {
+      s.notifications.m10 = true;
+      addLog('10분 미반응: 음성·LED 재알림을 전송했습니다.', 'warning');
+    }
+    if (s.elapsed >= 30 && !s.notifications.m30 && !s.received) {
+      s.notifications.m30 = true;
+      addLog('30분 미반응: 강화 알림을 전송했습니다.', 'warning');
+    }
+    if (s.elapsed >= state.settings.missedLimit && !s.notifications.m60 && !s.received) {
+      s.notifications.m60 = true;
+      s.status = 'MISSED';
+      addBothLogs(`${state.settings.missedLimit}분 미반응: 미수령 처리 및 보호자 알림을 전송했습니다.`, 'danger');
+      recordDose('MISSED', s.elapsed);
+    }
+  }
+
+  function requestDispense() {
+    const s = state.session;
+    if (!s) return;
+    if (!['AVAILABLE'].includes(s.status)) {
+      addLog('중복 또는 비정상 배출 요청이 차단되었습니다.', 'danger');
+      addLog('동일 회차의 반복 배출 요청이 감지되었습니다.', 'warning', true);
+      return;
+    }
+    s.status = 'DISPENSING';
+    addLog('회차 잠금 후 약 배출 명령을 실행합니다.', 'info');
+    renderSession();
+    setTimeout(() => {
+      if (!state.session || state.session.status !== 'DISPENSING') return;
+      state.session.status = 'DISPENSED';
+      state.session.dispensed = true;
+      addLog('약포지 배출이 완료되었습니다. 수령 센서 감지를 기다립니다.', 'success');
+      saveState();
+      renderAll();
+    }, 700);
+  }
+
+  function confirmReceive() {
+    const s = state.session;
+    if (!s) return;
+    if (!s.dispensed && s.status !== 'MISSED') {
+      addLog('약 배출 전에는 수령 확인을 할 수 없습니다.', 'warning');
+      return;
+    }
+    if (s.received) {
+      addLog('이미 수령된 회차입니다. 중복 입력을 차단했습니다.', 'danger');
+      return;
+    }
+    s.received = true;
+    if (s.elapsed <= state.settings.onTimeLimit) {
+      s.status = 'RECEIVED_ON_TIME';
+      addLog(`${s.elapsed}분에 수령이 확인되었습니다. 정시 수령으로 기록했습니다.`, 'success');
+      recordDose('RECEIVED_ON_TIME', s.elapsed);
+    } else if (s.elapsed <= state.settings.missedLimit) {
+      s.status = 'RECEIVED_LATE';
+      addLog(`${s.elapsed}분에 수령이 확인되었습니다. 지연 수령으로 기록했습니다.`, 'warning');
+      recordDose('RECEIVED_LATE', s.elapsed);
+    } else {
+      s.status = 'RECEIVED_AFTER_MISSED';
+      addBothLogs(`미수령 처리 후 ${s.elapsed}분에 수령이 확인되었습니다.`, 'warning');
+      recordDose('RECEIVED_AFTER_MISSED', s.elapsed);
+    }
+    saveState();
+    renderAll();
+  }
+
+  function recordDose(status, responseMinutes) {
+    if (!state.session) return;
+    if (state.doseRecords.some(r => r.id === state.session.id && r.status === status)) return;
+    state.doseRecords.unshift({
+      id: state.session.id,
+      label: state.session.label,
+      status,
+      responseMinutes,
+      time: nowText()
+    });
+    state.doseRecords = state.doseRecords.slice(0, 30);
+    saveState();
+  }
+
+  function triggerHardwareError() {
+    if (!state.session) startSession(false);
+    const type = document.getElementById('hardwareErrorType').value;
+    const labels = {
+      NO_FEED: '미이송', SLIP: '미끄러짐', OVERFEED: '과이송', LINE_NOT_FOUND: '절취선 미검출',
+      DOUBLE_LINE: '이중 절취선 감지', CUT_FAILURE: '절단 실패', OUTLET_JAM: '배출구 걸림'
+    };
+    state.errorSimulation = { type, label: labels[type], retryCount: 1, pending: true };
+    state.session.status = 'ERROR';
+    state.session.errorType = type;
+    addLog(`${labels[type]} 오류가 감지되었습니다. 자동 복구 1회를 수행합니다.`, 'danger');
+    saveState();
+    renderAll();
+  }
+
+  function resolveError(success) {
+    const e = state.errorSimulation;
+    if (!e || !e.pending) return;
+    e.pending = false;
+    if (success) {
+      state.session.status = 'AVAILABLE';
+      state.session.errorType = null;
+      addLog(`${e.label} 자동 복구에 성공했습니다. 정상 작동을 재개합니다.`, 'success');
+      state.errorSimulation = null;
+    } else {
+      addBothLogs(`${e.label} 자동 복구에 실패했습니다. 기기 작동을 중단하고 보호자에게 알렸습니다.`, 'danger');
+      state.pendingApproval = { sessionId: state.session.id, reason: e.label, createdAt: nowText() };
+      state.errorSimulation = null;
+    }
+    saveState();
+    renderAll();
+  }
+
+  function approveRetry(approved) {
+    if (!state.pendingApproval || !state.session) return;
+    if (approved) {
+      state.session.status = 'AVAILABLE';
+      state.session.retryApproved = true;
+      state.session.errorType = null;
+      addBothLogs('보호자가 재배출 1회를 승인했습니다.', 'success');
+    } else {
+      addBothLogs('보호자가 재배출 요청을 거절했습니다.', 'warning');
+    }
+    state.pendingApproval = null;
+    saveState();
+    renderAll();
+  }
+
+  function calculateV() {
+    const c = state.checklist.cognitive / 3 * 100;
+    const h = state.checklist.mobility / 3 * 100;
+    const s = state.checklist.sensory / 3 * 100;
+    const g = state.checklist.guardian / 3 * 100;
+    const r = state.checklist.complexity / 3 * 100;
+    const a = state.checklist.age / 2 * 100;
+    state.V = 0.30*c + 0.20*h + 0.15*s + 0.15*g + 0.15*r + 0.05*a;
+    saveState();
+    return state.V;
+  }
+
+  function mean(arr) { return arr.reduce((a,b) => a+b, 0) / arr.length; }
+  function sd(arr) {
+    const m = mean(arr);
+    return Math.sqrt(arr.reduce((sum, x) => sum + Math.pow(x-m, 2), 0) / arr.length);
+  }
+  function metricScore(today, arr, minSigma) {
+    const mu = mean(arr);
+    const sigma = Math.max(sd(arr), minSigma);
+    const z = Math.max(0, (today - mu) / sigma);
+    const score = 100 * Math.min(z / 3, 1);
+    return { mu, sigma, z, score };
+  }
+
+  function calculateRisk() {
+    readBaselineInputs();
+    const todayL = Number(document.getElementById('todayL').value || 0);
+    const todayN = Number(document.getElementById('todayN').value || 0);
+    const todayI = Number(document.getElementById('todayI').value || 0);
+    const L = metricScore(todayL, state.baseline.map(x => Number(x.L)), 3);
+    const N = metricScore(todayN, state.baseline.map(x => Number(x.N)), 0.15);
+    const I = metricScore(todayI, state.baseline.map(x => Number(x.I)), 3);
+    const D = 0.4*L.score + 0.4*N.score + 0.2*I.score;
+    const P = Math.min(100, D * (1 + 0.25 * state.V / 100));
+    const level = P >= 70 ? 'risk' : P >= 40 ? 'caution' : 'normal';
+    state.riskResult = { P, D, scores: { L: L.score, N: N.score, I: I.score }, details: { L, N, I }, level };
+    saveState();
+    renderRisk();
+    if (P >= 70) addLog(`행동 이상징후 점수 ${P.toFixed(1)}점: 보호자 확인이 필요합니다.`, 'danger', true);
+  }
+
+  function applyScenario(name) {
+    if (name === 'normal') {
+      document.getElementById('todayL').value = 7;
+      document.getElementById('todayN').value = 0;
+      document.getElementById('todayI').value = 3;
+    } else if (name === 'caution') {
+      document.getElementById('todayL').value = 20;
+      document.getElementById('todayN').value = 0.20;
+      document.getElementById('todayI').value = 8;
+    } else {
+      document.getElementById('todayL').value = 32;
+      document.getElementById('todayN').value = 0.67;
+      document.getElementById('todayI').value = 16;
+    }
+    calculateRisk();
+  }
+
+  function renderChecklist() {
+    const container = document.getElementById('checklistContainer');
+    container.innerHTML = checklistDefinitions.map(def => `
+      <div class="check-row">
+        <div><strong>${def.title}</strong><small>가중치 ${def.key === 'cognitive' ? 30 : def.key === 'mobility' ? 20 : def.key === 'age' ? 5 : 15}%</small></div>
+        <select data-check-key="${def.key}">
+          ${def.options.map((o, i) => `<option value="${i}" ${Number(state.checklist[def.key]) === i ? 'selected' : ''}>${o}</option>`).join('')}
+        </select>
+      </div>`).join('');
+  }
+
+  function renderBaseline() {
+    const body = document.getElementById('baselineTableBody');
+    body.innerHTML = state.baseline.map((row, i) => `
+      <tr>
+        <td>${row.day}</td>
+        <td><input class="baseline-input" data-index="${i}" data-key="L" type="number" step="0.1" value="${row.L}"></td>
+        <td><input class="baseline-input" data-index="${i}" data-key="N" type="number" step="0.01" min="0" max="1" value="${row.N}"></td>
+        <td><input class="baseline-input" data-index="${i}" data-key="I" type="number" step="0.1" value="${row.I}"></td>
+      </tr>`).join('');
+  }
+  function readBaselineInputs() {
+    document.querySelectorAll('.baseline-input').forEach(input => {
+      state.baseline[Number(input.dataset.index)][input.dataset.key] = Number(input.value || 0);
+    });
+  }
+
+  function renderSession() {
+    const s = state.session;
+    const statusText = document.getElementById('userStatusText');
+    const detail = document.getElementById('userStatusDetail');
+    const elapsed = document.getElementById('elapsedValue');
+    const stage = document.getElementById('stageValue');
+    const progress = document.getElementById('sessionProgress');
+
+    if (!s) {
+      statusText.textContent = '복약 예정';
+      detail.textContent = '데모 회차를 시작하면 약포지 자동 배출과 수령 확인 시뮬레이션이 시작됩니다.';
+      elapsed.textContent = '0분';
+      stage.textContent = '대기';
+      progress.style.width = '0%';
+      return;
+    }
+
+    statusText.textContent = sessionStatusLabel(s.status);
+    elapsed.textContent = `${s.elapsed}분`;
+    stage.textContent = s.elapsed >= state.settings.missedLimit ? '미수령' : s.elapsed > state.settings.onTimeLimit ? '지연 구간' : '정시 구간';
+    const pct = Math.min(100, s.elapsed / state.settings.missedLimit * 100);
+    progress.style.width = `${pct}%`;
+
+    const details = {
+      AVAILABLE: '복약 시간이 도달하면 약포지가 자동으로 배출됩니다.',
+      DISPENSING: '중복 요청을 막기 위해 해당 회차를 잠그고 있습니다.',
+      DISPENSED: '약포지가 배출되었습니다. 수령 센서 감지를 기다리고 있습니다.',
+      RECEIVED_ON_TIME: `${s.elapsed}분에 수령이 확인되었습니다. · 정시 수령`,
+      RECEIVED_LATE: `${s.elapsed}분에 수령이 확인되었습니다. · 지연 수령`,
+      MISSED: `${state.settings.missedLimit}분 동안 수령되지 않아 보호자에게 알렸습니다.`,
+      ERROR: `기기 오류: ${s.errorType || '오류 확인 중'}`,
+      RECEIVED_AFTER_MISSED: `미수령 처리 후 ${s.elapsed}분에 수령되었습니다.`
+    };
+    detail.textContent = details[s.status] || '복약 상태를 확인 중입니다.';
+    renderNotificationTimeline();
+  }
+
+  function renderNotificationTimeline() {
+    const s = state.session;
+    const container = document.getElementById('notificationTimeline');
+    const items = [
+      { min: 0, label: '복약시간', text: '음성·LED 최초 알림', done: !!s },
+      { min: 10, label: '+10분', text: '음성·LED 재알림', done: !!s?.notifications?.m10 },
+      { min: 30, label: '+30분', text: '강화 알림', done: !!s?.notifications?.m30 },
+      { min: state.settings.missedLimit, label: `+${state.settings.missedLimit}분`, text: '미수령·보호자 알림', done: !!s?.notifications?.m60 }
+    ];
+    container.innerHTML = items.map((item, idx) => {
+      const cls = item.done ? (idx === 3 ? 'danger' : idx > 0 ? 'alert' : 'done') : '';
+      return `<div class="timeline-row ${cls}"><strong>${item.label}</strong><span>${item.text}</span><span class="badge ${item.done ? 'badge-info' : 'badge-muted'}">${item.done ? '완료' : '대기'}</span></div>`;
+    }).join('');
+  }
+
+  function renderLogs() {
+    const build = logs => logs.length ? logs.map(log => `<div class="log-item ${log.type}"><div class="log-time">${log.time}</div>${log.message}</div>`).join('') : '<div class="muted small">아직 기록이 없습니다.</div>';
+    document.getElementById('userLogs').innerHTML = build(state.logs);
+    document.getElementById('guardianLogs').innerHTML = build(state.guardianLogs);
+  }
+
+  function renderGuardian() {
+    const counts = { on: 0, late: 0, missed: 0, error: 0 };
+    state.doseRecords.forEach(r => {
+      if (r.status === 'RECEIVED_ON_TIME') counts.on++;
+      else if (r.status === 'RECEIVED_LATE' || r.status === 'RECEIVED_AFTER_MISSED') counts.late++;
+      else if (r.status === 'MISSED') counts.missed++;
+      else if (r.status === 'ERROR') counts.error++;
+    });
+    document.getElementById('guardianOnTime').textContent = counts.on;
+    document.getElementById('guardianLate').textContent = counts.late;
+    document.getElementById('guardianMissed').textContent = counts.missed;
+    document.getElementById('guardianErrors').textContent = state.guardianLogs.filter(x => x.message.includes('오류')).length;
+
+    const body = document.getElementById('doseTableBody');
+    body.innerHTML = state.doseRecords.length ? state.doseRecords.map(r => `
+      <tr><td>${r.label}</td><td>${sessionStatusLabel(r.status)}</td><td>${r.responseMinutes ?? '-'}분</td><td>${r.time}</td></tr>
+    `).join('') : '<tr><td colspan="4" class="muted">복약 기록이 없습니다.</td></tr>';
+
+    const panel = document.getElementById('approvalPanel');
+    const approve = document.getElementById('approveRetryBtn');
+    const reject = document.getElementById('rejectRetryBtn');
+    if (state.pendingApproval) {
+      panel.textContent = `재배출 승인 요청 · 사유: ${state.pendingApproval.reason} · 요청 시각: ${state.pendingApproval.createdAt}`;
+      approve.disabled = false; reject.disabled = false;
+    } else {
+      panel.textContent = '현재 승인 대기 중인 요청이 없습니다.';
+      approve.disabled = true; reject.disabled = true;
+    }
+  }
+
+  function renderRisk() {
+    const r = state.riskResult;
+    document.getElementById('riskV').value = state.V.toFixed(1);
+    document.getElementById('finalScore').textContent = r.P.toFixed(0);
+    document.getElementById('scoreCircle').style.background = `conic-gradient(var(--primary) ${r.P*3.6}deg, #e8ecf4 0deg)`;
+    document.getElementById('barL').style.width = `${r.scores.L}%`;
+    document.getElementById('barN').style.width = `${r.scores.N}%`;
+    document.getElementById('barI').style.width = `${r.scores.I}%`;
+    document.getElementById('scoreL').textContent = r.scores.L.toFixed(0);
+    document.getElementById('scoreN').textContent = r.scores.N.toFixed(0);
+    document.getElementById('scoreI').textContent = r.scores.I.toFixed(0);
+
+    const badge = document.getElementById('riskBadge');
+    const summary = document.getElementById('riskSummary');
+    const detail = document.getElementById('riskDetail');
+    badge.className = 'badge';
+    if (r.level === 'risk') {
+      badge.classList.add('badge-risk'); badge.textContent = '보호자 확인 필요';
+      summary.textContent = '복수 행동지표에서 큰 변화가 감지되었습니다.';
+    } else if (r.level === 'caution') {
+      badge.classList.add('badge-caution'); badge.textContent = '주의 관찰';
+      summary.textContent = '평소와 다른 복약 행동이 감지되었습니다.';
+    } else {
+      badge.classList.add('badge-normal'); badge.textContent = '평소 범위';
+      summary.textContent = '평소 복약 행동 범위입니다.';
+    }
+    if (r.details) {
+      detail.textContent = `행동변화 원점수 D ${r.D.toFixed(1)} · 고정 취약도 V ${state.V.toFixed(1)} · 최종 P ${r.P.toFixed(1)}`;
+    }
+  }
+
+  function renderErrorState() {
+    const box = document.getElementById('errorStateBox');
+    const success = document.getElementById('retrySuccessBtn');
+    const fail = document.getElementById('retryFailBtn');
+    if (state.errorSimulation?.pending) {
+      box.textContent = `${state.errorSimulation.label} 감지 · 자동복구 1회 결과를 선택하세요.`;
+      success.disabled = false; fail.disabled = false;
+    } else {
+      box.textContent = '현재 오류가 없습니다.';
+      success.disabled = true; fail.disabled = true;
+    }
+  }
+
+  function renderSettings() {
+    document.getElementById('onTimeLimit').value = state.settings.onTimeLimit;
+    document.getElementById('missedLimit').value = state.settings.missedLimit;
+    document.getElementById('vScoreDisplay').textContent = state.V.toFixed(1);
+    document.getElementById('riskV').value = state.V.toFixed(1);
+  }
+
+  function renderAll() {
+    renderSession();
+    renderLogs();
+    renderGuardian();
+    renderRisk();
+    renderErrorState();
+    renderSettings();
+  }
+
+  function quickScenario(type) {
+    startSession(false);
+    setTimeout(() => {
+      requestDispense();
+      setTimeout(() => {
+        if (type === 'onTime') {
+          setElapsed(Math.min(8, state.settings.onTimeLimit));
+          confirmReceive();
+        } else if (type === 'late') {
+          setElapsed(Math.max(state.settings.onTimeLimit + 10, 30));
+          confirmReceive();
+        } else if (type === 'missed') {
+          setElapsed(state.settings.missedLimit);
+        } else if (type === 'duplicate') {
+          requestDispense();
+          setTimeout(requestDispense, 150);
+        }
+      }, 900);
+    }, 100);
+  }
+
+  function exportData() {
+    const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'yakson_mvp_data.json'; a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function resetAll() {
+    if (!confirm('저장된 모든 MVP 데이터를 초기화할까요?')) return;
+    state = clone(defaultState);
+    saveState();
+    renderChecklist();
+    renderBaseline();
+    renderAll();
+    addLog('전체 데이터가 초기화되었습니다.', 'info');
+  }
+
+  document.querySelectorAll('.nav-btn').forEach(btn => btn.addEventListener('click', () => {
+    document.querySelectorAll('.nav-btn').forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(x => x.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.page).classList.add('active');
+  }));
+
+  document.getElementById('startSessionBtn').addEventListener('click', () => startSession(true));
+  document.querySelectorAll('.quick-time').forEach(btn => btn.addEventListener('click', () => setElapsed(btn.dataset.minute)));
+  document.getElementById('calculateRiskBtn').addEventListener('click', calculateRisk);
+  document.querySelectorAll('.scenario-btn').forEach(btn => btn.addEventListener('click', () => applyScenario(btn.dataset.scenario)));
+  document.getElementById('saveLimitsBtn').addEventListener('click', () => {
+    const on = Number(document.getElementById('onTimeLimit').value);
+    const miss = Number(document.getElementById('missedLimit').value);
+    if (!(on > 0 && miss > on)) return alert('미수령 기준은 정시 기준보다 커야 합니다.');
+    state.settings.onTimeLimit = on;
+    state.settings.missedLimit = miss;
+    saveState(); renderAll(); addLog('복약 판정 기준을 저장했습니다.', 'info');
+  });
+  document.getElementById('saveChecklistBtn').addEventListener('click', () => {
+    document.querySelectorAll('[data-check-key]').forEach(select => state.checklist[select.dataset.checkKey] = Number(select.value));
+    calculateV(); renderAll(); addLog(`고정 취약도 V가 ${state.V.toFixed(1)}점으로 저장되었습니다.`, 'info');
+  });
+  document.getElementById('triggerErrorBtn').addEventListener('click', triggerHardwareError);
+  document.getElementById('retrySuccessBtn').addEventListener('click', () => resolveError(true));
+  document.getElementById('retryFailBtn').addEventListener('click', () => resolveError(false));
+  document.getElementById('approveRetryBtn').addEventListener('click', () => approveRetry(true));
+  document.getElementById('rejectRetryBtn').addEventListener('click', () => approveRetry(false));
+  document.getElementById('scenarioOnTimeBtn').addEventListener('click', () => quickScenario('onTime'));
+  document.getElementById('scenarioLateBtn').addEventListener('click', () => quickScenario('late'));
+  document.getElementById('scenarioMissedBtn').addEventListener('click', () => quickScenario('missed'));
+  document.getElementById('scenarioDuplicateBtn').addEventListener('click', () => quickScenario('duplicate'));
+  document.getElementById('exportBtn').addEventListener('click', exportData);
+  document.getElementById('resetBtn').addEventListener('click', resetAll);
+
+  setInterval(() => {
+    document.getElementById('clockText').textContent = nowText();
+    document.getElementById('dateText').textContent = dateText();
+  }, 1000);
+
+  renderChecklist();
+  renderBaseline();
+  renderAll();
+  startTimer();
+  document.getElementById('clockText').textContent = nowText();
+  document.getElementById('dateText').textContent = dateText();
+})();
+</script>
+</body>
+</html>
