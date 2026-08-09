@@ -1,0 +1,2472 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>약손 소프트웨어 MVP</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --panel: #ffffff;
+      --text: #172033;
+      --muted: #65708a;
+      --line: #dfe5ef;
+      --primary: #3157d5;
+      --primary-soft: #eaf0ff;
+      --success: #16794a;
+      --success-soft: #e8f6ef;
+      --warning: #a46600;
+      --warning-soft: #fff4d8;
+      --danger: #b72e3d;
+      --danger-soft: #fdebed;
+      --shadow: 0 12px 30px rgba(29, 48, 91, 0.08);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, Pretendard, "Noto Sans KR", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+
+    .app-shell {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 250px 1fr;
+    }
+
+    aside {
+      background: #16213f;
+      color: #fff;
+      padding: 28px 18px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+    }
+
+    .brand {
+      padding: 0 10px 24px;
+      border-bottom: 1px solid rgba(255,255,255,.12);
+      margin-bottom: 18px;
+    }
+
+    .brand h1 { margin: 0 0 5px; font-size: 26px; }
+    .brand p { margin: 0; color: #b8c3e1; font-size: 13px; line-height: 1.5; }
+
+    .nav-btn {
+      width: 100%;
+      border: 0;
+      border-radius: 12px;
+      padding: 13px 14px;
+      margin: 5px 0;
+      text-align: left;
+      color: #d8e1fa;
+      background: transparent;
+    }
+
+    .nav-btn:hover, .nav-btn.active {
+      background: rgba(255,255,255,.12);
+      color: #fff;
+    }
+
+    .side-note {
+      position: absolute;
+      left: 18px;
+      right: 18px;
+      bottom: 20px;
+      color: #9eacd2;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    main { padding: 26px; }
+    .page { display: none; }
+    .page.active { display: block; }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .topbar h2 { margin: 0 0 6px; font-size: 28px; }
+    .topbar p { margin: 0; color: var(--muted); }
+
+    .clock {
+      text-align: right;
+      padding: 10px 14px;
+      border-radius: 12px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      min-width: 170px;
+    }
+    .clock strong { display: block; font-size: 19px; }
+    .clock span { color: var(--muted); font-size: 12px; }
+
+    .grid-2 { display: grid; grid-template-columns: 1.25fr .75fr; gap: 18px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow);
+    }
+
+    .card h3 { margin: 0 0 14px; font-size: 18px; }
+    .card h4 { margin: 18px 0 10px; }
+    .muted { color: var(--muted); }
+    .small { font-size: 12px; }
+
+    .status-panel {
+      padding: 24px;
+      border-radius: 18px;
+      background: linear-gradient(145deg, #1e2f63, #3157d5);
+      color: #fff;
+      min-height: 245px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .status-panel .eyebrow { color: #cbd6ff; font-size: 13px; }
+    .status-panel .big-status { font-size: 34px; font-weight: 800; margin: 6px 0; }
+    .status-panel .status-detail { color: #d9e1ff; }
+
+    .status-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+
+    .btn {
+      border: 0;
+      border-radius: 12px;
+      padding: 11px 15px;
+      font-weight: 700;
+      transition: .15s ease;
+    }
+    .btn:hover { transform: translateY(-1px); }
+    .btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-light { background: #fff; color: #203161; }
+    .btn-soft { background: var(--primary-soft); color: var(--primary); }
+    .btn-success { background: var(--success); color: #fff; }
+    .btn-warning { background: var(--warning-soft); color: var(--warning); }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-outline { background: transparent; color: var(--text); border: 1px solid var(--line); }
+
+    .kpi {
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fff;
+    }
+    .kpi .label { color: var(--muted); font-size: 12px; }
+    .kpi .value { font-size: 26px; font-weight: 800; margin-top: 4px; }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 5px 9px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .badge-normal { color: var(--success); background: var(--success-soft); }
+    .badge-caution { color: var(--warning); background: var(--warning-soft); }
+    .badge-risk { color: var(--danger); background: var(--danger-soft); }
+    .badge-info { color: var(--primary); background: var(--primary-soft); }
+    .badge-muted { color: #5f6b84; background: #eef1f6; }
+
+    .timeline { display: grid; gap: 10px; }
+    .timeline-row {
+      display: grid;
+      grid-template-columns: 70px 1fr auto;
+      gap: 10px;
+      align-items: center;
+      padding: 11px 12px;
+      background: #f8faff;
+      border-radius: 12px;
+      border: 1px solid #edf1f8;
+    }
+    .timeline-row.done { background: var(--success-soft); }
+    .timeline-row.alert { background: var(--warning-soft); }
+    .timeline-row.danger { background: var(--danger-soft); }
+
+    .progress {
+      height: 10px;
+      background: #e8ecf4;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .progress > span {
+      display: block;
+      height: 100%;
+      width: 0;
+      background: var(--primary);
+      transition: width .3s ease;
+    }
+
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 11px 10px; border-bottom: 1px solid var(--line); text-align: left; font-size: 13px; }
+    th { color: var(--muted); font-weight: 700; background: #fafbfe; }
+
+    .log-list {
+      display: grid;
+      gap: 9px;
+      max-height: 360px;
+      overflow: auto;
+    }
+    .log-item {
+      padding: 11px 12px;
+      border-radius: 12px;
+      background: #f8faff;
+      border-left: 4px solid #aab7d6;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+    .log-item.success { border-left-color: var(--success); }
+    .log-item.warning { border-left-color: var(--warning); }
+    .log-item.danger { border-left-color: var(--danger); }
+    .log-item.info { border-left-color: var(--primary); }
+    .log-time { color: var(--muted); font-size: 11px; margin-bottom: 3px; }
+
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .field { display: grid; gap: 7px; }
+    .field label { font-weight: 700; font-size: 13px; }
+    .field input, .field select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px 11px;
+      background: #fff;
+      color: var(--text);
+    }
+
+    .checklist { display: grid; gap: 12px; }
+    .check-row {
+      display: grid;
+      grid-template-columns: 230px 1fr;
+      gap: 12px;
+      align-items: start;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+    }
+    .check-row strong { font-size: 14px; }
+    .check-row small { color: var(--muted); display: block; margin-top: 5px; line-height: 1.45; }
+
+    .risk-score {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+    .score-circle {
+      width: 112px;
+      height: 112px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: conic-gradient(var(--primary) 0deg, #e8ecf4 0deg);
+      position: relative;
+      flex: 0 0 auto;
+    }
+    .score-circle::after {
+      content: "";
+      width: 84px;
+      height: 84px;
+      background: #fff;
+      border-radius: 50%;
+      position: absolute;
+    }
+    .score-circle span {
+      position: relative;
+      z-index: 1;
+      font-weight: 800;
+      font-size: 26px;
+    }
+
+    .metric-row {
+      display: grid;
+      grid-template-columns: 120px 1fr 56px;
+      align-items: center;
+      gap: 10px;
+      margin: 11px 0;
+    }
+    .metric-row .bar { height: 9px; background: #edf0f6; border-radius: 999px; overflow: hidden; }
+    .metric-row .bar span { display: block; height: 100%; background: var(--primary); }
+
+    .risk-dual { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .risk-card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+    .indicator-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 16px; }
+    .indicator-box { padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: #fafbfe; }
+    .indicator-box .label { color: var(--muted); font-size: 11px; margin-bottom: 5px; }
+    .indicator-box .value { font-size: 20px; font-weight: 800; }
+    .profile-labels { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .profile-label { padding: 14px; border-radius: 14px; border: 1px solid var(--line); background: #fafbfe; }
+    .profile-label strong { display: block; margin-bottom: 7px; }
+    .formula-box { padding: 12px 14px; border-radius: 12px; background: #f7f8fc; border: 1px solid var(--line); font-size: 13px; line-height: 1.6; }
+
+    .guardian-guidance-card {
+      border: 1px solid #dfe5f2;
+      transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
+    }
+    .guardian-guidance-card.tone-normal { border-color: #bfe4d0; background: linear-gradient(180deg, #ffffff 0%, #f8fffb 100%); }
+    .guardian-guidance-card.tone-caution { border-color: #f0d38a; background: linear-gradient(180deg, #ffffff 0%, #fffdf7 100%); }
+    .guardian-guidance-card.tone-risk { border-color: #efb7bd; background: linear-gradient(180deg, #ffffff 0%, #fff9fa 100%); }
+    .guidance-status-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 14px; }
+    .guidance-kpi { padding: 15px; border: 1px solid var(--line); border-radius: 14px; background: #fff; }
+    .guidance-kpi .label { color: var(--muted); font-size: 12px; font-weight: 700; margin-bottom: 7px; }
+    .guidance-kpi .main { display: flex; align-items: baseline; gap: 5px; }
+    .guidance-kpi .main strong { font-size: 26px; line-height: 1; }
+    .guidance-kpi .main span { color: var(--muted); font-size: 13px; }
+    .guidance-kpi .sub { margin-top: 7px; color: var(--muted); font-size: 12px; }
+    .guidance-message {
+      margin-top: 14px;
+      padding: 17px 18px;
+      border-radius: 14px;
+      border-left: 5px solid #aab7d6;
+      background: #f7f9fd;
+      line-height: 1.65;
+    }
+    .guidance-message strong { display: block; font-size: 16px; margin-bottom: 5px; }
+    .guidance-message.normal { border-left-color: var(--success); background: var(--success-soft); color: #17623d; }
+    .guidance-message.caution { border-left-color: var(--warning); background: var(--warning-soft); color: #7a5310; }
+    .guidance-message.risk { border-left-color: var(--danger); background: var(--danger-soft); color: #8f2531; }
+    .guidance-message.muted { color: var(--muted); }
+    .guidance-matrix-details { margin-top: 12px; }
+    .guidance-matrix-details summary { cursor: pointer; font-weight: 700; color: #41516f; }
+    .guidance-matrix { margin-top: 10px; min-width: 760px; }
+    .guidance-matrix th, .guidance-matrix td { vertical-align: top; line-height: 1.5; }
+    .guidance-matrix .row-label { white-space: nowrap; font-weight: 800; color: var(--text); }
+    .guidance-cell-title { font-weight: 800; display: block; margin-bottom: 3px; }
+    .trend-header-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+    .trend-chart-scroll {
+      margin-top: 12px;
+      overflow-x: auto;
+      overflow-y: hidden;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: linear-gradient(180deg, #ffffff 0%, #fbfcff 100%);
+      scroll-behavior: smooth;
+    }
+    .trend-chart-svg { display: block; width: 100%; height: 360px; }
+    .trend-detail-box {
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fafbfe;
+    }
+    .trend-detail-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+    .trend-detail-summary { display: flex; gap: 8px; flex-wrap: wrap; }
+    .trend-slot-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .trend-slot-card {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+      padding: 12px;
+    }
+    .trend-slot-card strong { display: block; margin-bottom: 8px; }
+    .trend-slot-card .meta { color: var(--muted); font-size: 12px; line-height: 1.5; }
+
+    .test-buttons { display: flex; flex-wrap: wrap; gap: 9px; }
+    .notice {
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: var(--primary-soft);
+      color: #2948a9;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .footer-actions { display: flex; gap: 9px; flex-wrap: wrap; margin-top: 16px; }
+
+    .schedule-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .schedule-item {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 14px;
+      background: #fafbfe;
+    }
+    .schedule-item .schedule-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+    .schedule-item input[type="time"] { width: 100%; border: 1px solid var(--line); border-radius: 10px; padding: 10px; background: #fff; }
+    .toggle-line { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 700; }
+    .connection-row { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
+    .connection-dot { width: 10px; height: 10px; border-radius: 50%; background: #aab2c3; box-shadow: 0 0 0 4px rgba(170,178,195,.15); }
+    .connection-dot.online { background: var(--success); box-shadow: 0 0 0 4px rgba(22,121,74,.15); }
+    .connection-dot.offline { background: var(--danger); box-shadow: 0 0 0 4px rgba(183,46,61,.15); }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+
+
+    @media (max-width: 960px) {
+      .app-shell { grid-template-columns: 1fr; }
+      aside { position: static; height: auto; }
+      .side-note { display: none; }
+      .nav { display: flex; overflow-x: auto; gap: 6px; }
+      .nav-btn { min-width: max-content; width: auto; }
+      main { padding: 18px; }
+      .grid-2, .grid-3, .grid-4, .form-grid, .schedule-grid { grid-template-columns: 1fr; }
+      .check-row { grid-template-columns: 1fr; }
+      .topbar { flex-direction: column; }
+      .risk-dual, .indicator-grid, .profile-labels, .trend-slot-grid, .guidance-status-grid { grid-template-columns: 1fr; }
+      .clock { text-align: left; }
+    }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+  <aside>
+    <div class="brand">
+      <h1>약손</h1>
+      <p>고령자 복약관리 소프트웨어 MVP</p>
+    </div>
+    <div class="nav">
+      <button class="nav-btn active" data-page="userPage">사용자 화면</button>
+      <button class="nav-btn" data-page="guardianPage">보호자 화면</button>
+      <button class="nav-btn" data-page="riskPage">이상징후 분석</button>
+      <button class="nav-btn" data-page="settingsPage">설정·체크리스트</button>
+    </div>
+    <div class="side-note">ESP32 상태는 Firebase를 통해 동기화되며 설정값은 브라우저에도 저장됩니다.</div>
+  </aside>
+
+  <main>
+    <section id="userPage" class="page active">
+      <div class="topbar">
+        <div>
+          <h2>하드웨어 알고리즘 구현</h2>
+          <p>Firebase를 통해 ESP32의 실제 알람·버튼 반응·약포지 배출 상태를 실시간으로 표시합니다.</p>
+        </div>
+        <div class="clock"><strong id="clockText">--:--:--</strong><span id="dateText">----</span></div>
+      </div>
+
+      <div class="grid-2">
+        <div class="status-panel">
+          <div>
+            <div class="eyebrow">현재 복약 회차</div>
+            <div class="big-status" id="userStatusText">복약 예정</div>
+            <div class="status-detail" id="userStatusDetail">ESP32의 다음 복약 알람을 기다리고 있습니다.</div>
+          </div>
+          <div>
+            <div class="progress"><span id="sessionProgress"></span></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>복약 회차 정보</h3>
+          <div class="grid-2" style="grid-template-columns:1fr 1fr; gap:10px;">
+            <div class="kpi"><div class="label">경과시간</div><div class="value" id="elapsedValue">0초</div></div>
+            <div class="kpi"><div class="label">현재 단계</div><div class="value" id="stageValue" style="font-size:20px;">대기</div></div>
+          </div>
+          <div class="notice" style="margin-top:14px;">
+            <strong>프로토타입 판정 기준</strong><br>
+            0~25초 정시 수령 · 25초 초과~35초 미만 지연 수령 · 35초 이상 미수령<br>
+            알람은 0초, 10초, 20초에 시작되며 각각 약 5초간 음성·LED가 작동합니다.
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-2" style="margin-top:18px;">
+        <div class="card">
+          <h3>단계별 알림</h3>
+          <div id="notificationTimeline" class="timeline"></div>
+        </div>
+        <div class="card">
+          <h3>실시간 이벤트 로그</h3>
+          <div id="userLogs" class="log-list"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="guardianPage" class="page">
+      <div class="topbar">
+        <div>
+          <h2>보호자 화면</h2>
+          <p>Firebase에서 수신한 오늘의 실제 복약 현황과 미수령·오류 알림을 확인합니다.</p>
+        </div>
+      </div>
+
+      <div class="grid-4">
+        <div class="kpi"><div class="label">정시 수령</div><div class="value" id="guardianOnTime">0</div></div>
+        <div class="kpi"><div class="label">지연 수령</div><div class="value" id="guardianLate">0</div></div>
+        <div class="kpi"><div class="label">미수령</div><div class="value" id="guardianMissed">0</div></div>
+        <div class="kpi"><div class="label">오류</div><div class="value" id="guardianErrors">0</div></div>
+      </div>
+
+      <div class="card" style="margin-top:18px;">
+        <div style="display:flex; justify-content:space-between; gap:14px; align-items:flex-start; flex-wrap:wrap;">
+          <div>
+            <h3 style="margin-bottom:6px;">복약 배출 시간 설정</h3>
+            <p class="muted small" style="margin:0;">보호자가 아침·점심·저녁의 자동 배출 시간을 직접 지정합니다.</p>
+          </div>
+          <div class="connection-row">
+            <span id="deviceConnectionDot" class="connection-dot"></span>
+            <strong id="deviceConnectionText" class="small">ESP32 연동 미설정</strong>
+          </div>
+        </div>
+        <div class="schedule-grid" style="margin-top:16px;">
+          <div class="schedule-item">
+            <div class="schedule-head"><strong>아침</strong><label class="toggle-line"><input id="morningEnabled" type="checkbox"> 사용</label></div>
+            <input id="morningTime" type="time" value="08:00">
+          </div>
+          <div class="schedule-item">
+            <div class="schedule-head"><strong>점심</strong><label class="toggle-line"><input id="lunchEnabled" type="checkbox"> 사용</label></div>
+            <input id="lunchTime" type="time" value="13:00">
+          </div>
+          <div class="schedule-item">
+            <div class="schedule-head"><strong>저녁</strong><label class="toggle-line"><input id="dinnerEnabled" type="checkbox"> 사용</label></div>
+            <input id="dinnerTime" type="time" value="19:00">
+          </div>
+        </div>
+        <div class="footer-actions">
+          <button class="btn btn-primary" id="saveScheduleBtn">시간 저장 및 ESP32 전송</button>
+          <button class="btn btn-outline" id="refreshDeviceBtn">기기 상태 새로고침</button>
+        </div>
+        <div id="scheduleSyncMessage" class="notice" style="margin-top:14px;">Firebase 연동 전에는 이 브라우저에만 시간이 저장됩니다.</div>
+      </div>
+
+      <div class="grid-2" style="margin-top:18px;">
+        <div class="card">
+          <h3>오늘의 복약 기록</h3>
+          <p class="muted small">Firebase에서 수신한 실제 ESP32 완료 기록만 표시합니다.</p>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>회차</th><th>상태</th><th>반응시간</th><th>기록 시각</th></tr></thead>
+              <tbody id="doseTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <h3>보호자 알림함</h3>
+          <div id="guardianLogs" class="log-list"></div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:18px;">
+        <h3>재배출 승인</h3>
+        <p class="muted small">기기 오류로 배출에 실패했을 때만 보호자 승인 후 1회 재배출할 수 있습니다.</p>
+        <div id="approvalPanel" class="notice">현재 승인 대기 중인 요청이 없습니다.</div>
+        <div class="footer-actions">
+          <button class="btn btn-success" id="approveRetryBtn" disabled>재배출 1회 승인</button>
+          <button class="btn btn-outline" id="rejectRetryBtn" disabled>거절</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="riskPage" class="page">
+      <div class="topbar">
+        <div>
+          <h2>개인별 복약 위험도 분석</h2>
+          <p>실제 ESP32 복약 기록을 이용해 현재 복약관리 상태와 개인 행동변화를 서로 독립적으로 평가합니다.</p>
+        </div>
+      </div>
+
+      <div class="risk-dual">
+        <div class="card">
+          <div class="risk-card-head">
+            <div>
+              <h3 style="margin:0 0 5px;">현재 복약관리 분석</h3>
+              <div class="muted small">최근 7개 완료일의 미수령 패턴을 평가합니다.</div>
+            </div>
+            <div class="badge badge-info">P_present</div>
+          </div>
+          <div class="risk-score">
+            <div class="score-circle" id="presentScoreCircle"><span id="presentScore">-</span></div>
+            <div>
+              <div id="presentBadge" class="badge badge-muted">데이터 수집 중</div>
+              <h3 id="presentSummary" style="margin:10px 0 6px;">최근 7일 기록이 필요합니다.</h3>
+              <div class="muted small" id="presentDetail">R7·F7·Mt 중 가장 큰 값을 현재 복약관리 위험으로 사용합니다.</div>
+            </div>
+          </div>
+          <div class="indicator-grid">
+            <div class="indicator-box"><div class="label">R7 · 최근 7일 미수령률</div><div class="value" id="indicatorR7">-</div></div>
+            <div class="indicator-box"><div class="label">F7 · 미수령 발생일 비율</div><div class="value" id="indicatorF7">-</div></div>
+            <div class="indicator-box"><div class="label">Mt · 현재일 미수령률</div><div class="value" id="indicatorMt">-</div></div>
+          </div>
+          <div class="formula-box" style="margin-top:12px;"><strong>P_present = 100 × max(R7, F7, Mt)</strong><br>R7 = 최근 7일 전체 회차 중 미수령 비율 · F7 = 최근 7일 중 미수령이 1회 이상 발생한 날짜 비율 · Mt = 가장 최근 완료일의 미수령 비율</div>
+        </div>
+
+        <div class="card">
+          <div class="risk-card-head">
+            <div>
+              <h3 style="margin:0 0 5px;">개인 행동변화 분석</h3>
+              <div class="muted small">현재 반응시간을 직전 7일 개인 기준선과 비교합니다.</div>
+            </div>
+            <div class="badge badge-info">P_change</div>
+          </div>
+          <div class="risk-score">
+            <div class="score-circle" id="changeScoreCircle"><span id="changeScore">-</span></div>
+            <div>
+              <div id="changeBadge" class="badge badge-muted">기준선 수집 중</div>
+              <h3 id="changeSummary" style="margin:10px 0 6px;">직전 7일 + 현재일 기록이 필요합니다.</h3>
+              <div class="muted small" id="changeDetail">평소보다 반응시간이 느려진 정도만 변화량 Δ로 계산합니다.</div>
+            </div>
+          </div>
+          <div class="indicator-grid">
+            <div class="indicator-box"><div class="label">Lt · 현재 평균 반응시간</div><div class="value" id="indicatorLt">-</div></div>
+            <div class="indicator-box"><div class="label">μL · 개인 기준 평균</div><div class="value" id="indicatorMuL">-</div></div>
+            <div class="indicator-box"><div class="label">σL · 개인 기준 표준편차</div><div class="value" id="indicatorSigmaL">-</div></div>
+          </div>
+          <div class="indicator-box" style="margin-top:10px;"><div class="label">Δ = max(Lt − μL, 0)</div><div class="value" id="indicatorDelta">-</div></div>
+          <div class="formula-box" style="margin-top:12px;"><strong>P_change = 100 × min(Δ / (3σL), 1)</strong><br>평소보다 빨라진 반응은 위험 증가로 보지 않습니다. σL=0인 기준선에서 반응이 느려지면 변화점수는 100점으로 처리합니다.</div>
+        </div>
+      </div>
+
+      <div class="card guardian-guidance-card" id="guardianGuidanceCard" style="margin-top:18px;">
+        <div class="risk-card-head">
+          <div>
+            <h3 style="margin:0 0 5px;">보호자 종합 상태 안내</h3>
+            <div class="muted small">변동지표 점수와 고정지표 수준을 함께 보아 보호자가 지금 필요한 관리 강도를 직관적으로 확인합니다.</div>
+          </div>
+          <div id="guardianGuidanceBadge" class="badge badge-muted">데이터 수집 중</div>
+        </div>
+
+        <div class="guidance-status-grid">
+          <div class="guidance-kpi">
+            <div class="label">변동지표 점수 · P_change</div>
+            <div class="main"><strong id="guidanceChangeScore">-</strong><span>/ 100점</span></div>
+            <div class="sub" id="guidanceChangeLevel">직전 7일 기준선과 비교할 데이터가 필요합니다.</div>
+          </div>
+          <div class="guidance-kpi">
+            <div class="label">고정지표 수준</div>
+            <div class="main"><strong id="guidanceFixedLevel">낮음</strong></div>
+            <div class="sub" id="guidanceFixedDetail">사용자 특성 체크리스트를 기준으로 판정합니다.</div>
+          </div>
+        </div>
+
+        <div id="guardianGuidanceMessage" class="guidance-message muted">
+          <strong>판정 대기</strong>
+          변동지표 계산에 필요한 데이터가 모이면 고정지표와 조합해 9가지 상황별 안내 문구를 자동으로 표시합니다.
+        </div>
+
+        <details class="guidance-matrix-details">
+          <summary>9가지 보호자 안내 기준 보기</summary>
+          <div class="table-wrap">
+            <table class="guidance-matrix">
+              <thead><tr><th>변동지표</th><th>고정지표 낮음</th><th>고정지표 중간</th><th>고정지표 높음</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td class="row-label">0~39점 · 안정</td>
+                  <td><span class="guidance-cell-title">안정</span>최근 복약 행동은 평소와 유사합니다. 현재의 복약 패턴을 유지해 주세요.</td>
+                  <td><span class="guidance-cell-title">안정 · 주기적 확인</span>현재 뚜렷한 행동 변화는 없지만 일부 복약 취약 요인이 있어 보호자의 주기적인 확인을 권장합니다.</td>
+                  <td><span class="guidance-cell-title">안정 · 지속 관리 필요</span>현재 행동 변화는 크지 않지만 기본 복약 취약도가 높아 보호자의 지속적인 관리와 확인이 필요합니다.</td>
+                </tr>
+                <tr>
+                  <td class="row-label">40~69점 · 주의</td>
+                  <td><span class="guidance-cell-title">주의</span>평소와 다른 복약 행동 변화가 관찰되고 있습니다. 최근 복약 기록과 추이를 확인해 주세요.</td>
+                  <td><span class="guidance-cell-title">주의 · 관리 필요</span>복약 취약요인이 있는 상태에서 행동 변화가 나타나고 있습니다. 보호자의 세심한 확인과 지속적인 관찰을 권장합니다.</td>
+                  <td><span class="guidance-cell-title">주의 · 집중 관리</span>높은 기본 취약도와 함께 복약 행동 변화가 관찰되고 있습니다. 보호자의 적극적인 확인과 관리가 필요합니다.</td>
+                </tr>
+                <tr>
+                  <td class="row-label">70~100점 · 집중관찰</td>
+                  <td><span class="guidance-cell-title">집중관찰</span>평소 대비 뚜렷한 복약 행동 변화가 관찰되고 있습니다. 변화가 지속되는지 면밀히 확인해 주세요.</td>
+                  <td><span class="guidance-cell-title">집중관찰 · 적극 관리</span>기본 취약요인과 뚜렷한 행동 변화가 함께 확인되어 보호자의 적극적인 관찰과 관리가 필요합니다.</td>
+                  <td><span class="guidance-cell-title">집중관찰 · 우선 확인 필요</span>높은 기본 취약도와 뚜렷한 복약 행동 변화가 함께 확인되었습니다. 보호자가 우선적으로 상태와 복약 기록을 확인해 주세요.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </details>
+      </div>
+
+      <div class="card" style="margin-top:18px;">
+        <div class="risk-card-head">
+          <div>
+            <h3 style="margin:0 0 5px;">보호자 표시 요약</h3>
+            <div class="muted small">고정 취약도와 복약 복잡도는 위험도 점수에 더하지 않고 라벨로 병기합니다.</div>
+          </div>
+          <button class="btn btn-success" id="loadEsp32MetricsBtn">ESP32 기록 새로 분석</button>
+        </div>
+        <div class="profile-labels">
+          <div class="profile-label"><strong>고정지표 수준</strong><span id="fixedVulnerabilityBadge" class="badge badge-normal">낮음</span><div class="muted small" id="fixedVulnerabilityDetail" style="margin-top:8px;">사용자 기능 4영역 중 가장 높은 등급을 적용합니다.</div></div>
+          <div class="profile-label"><strong>복약 복잡도 등급</strong><span id="complexityBadge" class="badge badge-info">하</span><div class="muted small" style="margin-top:8px;">상·중·하 라벨만 표시하며 P_present·P_change 산식에는 반영하지 않습니다.</div></div>
+        </div>
+        <div class="notice" id="esp32MetricMessage" style="margin-top:14px;">Firebase에서 실제 ESP32 완료 기록을 불러와 분석합니다.</div>
+        <div class="notice" style="margin-top:8px;">표시 라벨 기준: 0~39 정상 · 40~69 주의 · 70~100 위험</div>
+      </div>
+
+      <div class="card" style="margin-top:18px;">
+        <h3>슬라이딩 윈도우 데이터</h3>
+        <p class="muted small">P_present는 가장 최근 7개 완료일을 사용합니다. P_change는 현재 완료일을 제외한 직전 7개 완료일을 개인 기준선으로 사용합니다.</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>구분</th><th>날짜</th><th>평균 반응시간 L</th><th>미수령</th><th>일 미수령률 M</th></tr></thead>
+            <tbody id="baselineTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:18px;">
+        <div class="risk-card-head">
+          <div>
+            <h3 style="margin:0 0 5px;">하루 평균 복약 반응시간 추이</h3>
+            <div class="muted small">인바디 추이 화면처럼 날짜별 평균 복약 반응시간을 선 그래프로 확인합니다. 미수령 회차는 하루 평균에서 제외하고, 해당 날짜 아래에 빨간색으로 미수령 횟수를 표시합니다.</div>
+          </div>
+          <button class="btn btn-outline" id="trendLatestBtn">최근 7일 보기</button>
+        </div>
+        <div class="trend-header-row">
+          <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+            <div id="trendRangeBadge" class="badge badge-info">최근 7일</div>
+            <div id="trendRealtimeBadge" class="badge badge-muted">Firebase 실시간 대기</div>
+          </div>
+          <div id="trendUnitText" class="muted small">Y축: 평균 복약 반응시간</div>
+        </div>
+        <div id="trendEmptyState" class="notice" style="display:none; margin-top:12px;">아직 그래프를 그릴 실제 완료일 데이터가 없습니다.</div>
+        <div id="reactionTrendScroll" class="trend-chart-scroll" aria-label="하루 평균 복약 반응시간 스크롤 그래프">
+          <svg id="reactionTrendSvg" class="trend-chart-svg" role="img" aria-label="하루 평균 복약 반응시간 추이 그래프"></svg>
+        </div>
+        <div class="muted small" style="margin-top:10px;">기본 화면은 최근 7일이며, 좌우로 스크롤하면 최대 30일의 복약 반응시간 추이를 볼 수 있습니다. 마지막 데이터 점은 강조됩니다.</div>
+        <div id="trendDayDetail" class="trend-detail-box" style="margin-top:14px;">선택한 날짜의 아침·점심·저녁 상세 반응시간이 여기에 표시됩니다.</div>
+      </div>
+    </section>
+
+
+    <section id="settingsPage" class="page">
+      <div class="topbar">
+        <div>
+          <h2>설정 및 사용자 특성 체크리스트</h2>
+          <p>사용자 기능과 복약 복잡도를 등급화하며, 두 라벨은 위험도 점수 산식과 분리해 표시합니다.</p>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3>복약 판정 설정</h3>
+          <div class="form-grid">
+            <div class="field"><label>정시 수령 기준(분)</label><input id="onTimeLimit" type="number" min="1" max="59" value="15"></div>
+            <div class="field"><label>미수령 기준(분)</label><input id="missedLimit" type="number" min="2" max="180" value="60"></div>
+          </div>
+          <div class="footer-actions"><button class="btn btn-primary" id="saveLimitsBtn">기준 저장</button></div>
+        </div>
+
+        <div class="card">
+          <h3>사용자 특성 라벨</h3>
+          <div class="profile-labels">
+            <div class="profile-label"><strong>고정지표 수준</strong><span id="settingsFixedBadge" class="badge badge-normal">낮음</span><div class="muted small" style="margin-top:8px;">인지·복약관리, 거동·손 사용, 시청각·의사소통, 보호자 접근성 중 가장 높은 등급</div></div>
+            <div class="profile-label"><strong>복약 복잡도</strong><span id="settingsComplexityBadge" class="badge badge-info">하</span><div class="muted small" style="margin-top:8px;">복약 특성을 상·중·하로 별도 표시</div></div>
+          </div>
+          <p class="muted small" style="margin-bottom:0;">두 등급은 P_present·P_change 점수 계산에 직접 반영하지 않습니다.</p>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:18px;">
+        <h3>ESP32·Firebase 연동 설정</h3>
+        <p class="muted small">GitHub Pages는 정적 웹사이트이므로 ESP32와 직접 통신하지 않고 Firebase Realtime Database를 중간 서버로 사용합니다.</p><p class="muted small"><strong>반응시간 기준:</strong> ESP32에서 알람이 시작된 시각부터 사용자가 하드웨어 버튼을 누른 시각까지입니다. 초음파 센서는 수령이 아니라 약포지 배출 완료를 확인합니다.</p>
+        <div class="form-grid">
+          <div class="field">
+            <label>Realtime Database URL</label>
+            <input id="databaseUrl" type="url" placeholder="https://프로젝트명-default-rtdb.asia-southeast1.firebasedatabase.app">
+          </div>
+          <div class="field">
+            <label>기기 ID</label>
+            <input id="deviceId" type="text" value="barrierzero-01" placeholder="barrierzero-01">
+          </div>
+        </div>
+        <div class="footer-actions">
+          <button class="btn btn-primary" id="saveCloudBtn">연동 설정 저장</button>
+          <button class="btn btn-outline" id="testCloudBtn">Firebase 연결 테스트</button>
+        </div>
+        <div id="cloudStatusBox" class="notice" style="margin-top:14px;">Realtime Database URL을 입력하면 일정과 ESP32 상태를 동기화할 수 있습니다.</div>
+      </div>
+
+      <div class="card" style="margin-top:18px;">
+        <h3>사용자 기능·복약 특성 체크리스트</h3>
+        <p class="muted small">사용자 기능 4영역은 정상·주의·위험으로 라벨링하고, 복약 복잡도는 상·중·하로 분류합니다.</p>
+        <div id="checklistContainer" class="checklist"></div>
+        <div class="footer-actions"><button class="btn btn-primary" id="saveChecklistBtn">체크리스트 저장 및 등급 판정</button></div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+(() => {
+  const STORAGE_KEY = 'yaksonMvpStateV1';
+
+  const checklistDefinitions = [
+    {
+      key: 'cognitive', group: 'function', title: '인지·복약관리',
+      options: [
+        '0단계 · 알림을 이해하고 약을 혼자 수령·관리할 수 있음',
+        '1단계 · 가끔 보호자의 설명이나 확인이 필요함',
+        '2단계 · 반복 안내가 필요하거나 약 수령·복용을 자주 잊음',
+        '3단계 · 혼자 복약관리가 어려워 지속적인 보호자 감독이 필요함'
+      ]
+    },
+    {
+      key: 'mobility', group: 'function', title: '거동·손 사용',
+      options: [
+        '0단계 · 기기까지 이동하고 약포지를 혼자 꺼낼 수 있음',
+        '1단계 · 혼자 이동할 수 있으나 거동 불편으로 시간이 오래 걸림',
+        '2단계 · 이동하거나 약포지를 집을 때 부분적인 도움이 필요함',
+        '3단계 · 혼자 기기까지 이동하거나 약포지를 집기 어려움'
+      ]
+    },
+    {
+      key: 'sensory', group: 'function', title: '시청각·의사소통',
+      options: [
+        '0단계 · 음성 및 LED 알림을 모두 쉽게 인식할 수 있음',
+        '1단계 · 한 종류의 알림을 인식하는 데 어려움이 있음',
+        '2단계 · 보조기기를 사용하면 알림을 인식할 수 있음',
+        '3단계 · 보조기기를 사용해도 알림을 인식하기 어려움'
+      ]
+    },
+    {
+      key: 'guardian', group: 'function', title: '보호자 접근성',
+      options: [
+        '0단계 · 동거 보호자가 지속적으로 상태를 확인할 수 있음',
+        '1단계 · 보호자가 하루에 한 번 이상 방문하거나 연락할 수 있음',
+        '2단계 · 보호자의 확인이 정기적으로 이루어지기 어려움',
+        '3단계 · 위급 상황에도 보호자의 신속한 확인이 어려움'
+      ]
+    },
+    {
+      key: 'complexity', group: 'complexity', title: '복약 복잡도',
+      options: [
+        '0단계 · 하루 1~2회 복약하며 일정과 약 구성이 단순함',
+        '1단계 · 하루 3회 이상 복약하거나 여러 종류의 약을 복용함',
+        '2단계 · 시간대별 약 구성이 다르거나 복약 일정 변경이 잦음',
+        '3단계 · 복약조건이 복잡하고 보호자의 확인이 필요함'
+      ]
+    }
+  ];
+
+  const defaultBaseline = [];
+
+  const defaultState = {
+    dataVersion: 10,
+    baselineSource: 'ESP32',
+    settings: {
+      onTimeLimit: 15,
+      missedLimit: 60,
+      schedule: {
+        morning: { enabled: true, time: '08:00', label: '아침' },
+        lunch: { enabled: true, time: '13:00', label: '점심' },
+        dinner: { enabled: true, time: '19:00', label: '저녁' }
+      },
+      firebase: { databaseUrl: '', deviceId: 'barrierzero-01' }
+    },
+    checklist: { cognitive: 0, mobility: 0, sensory: 0, guardian: 0, complexity: 0 },
+    profileLabels: { fixed: '정상', complexity: '하', areas: { cognitive: '정상', mobility: '정상', sensory: '정상', guardian: '정상' } },
+    session: null,
+    doseRecords: [],
+    logs: [],
+    guardianLogs: [],
+    pendingApproval: null,
+    errorSimulation: null,
+    cloud: { connected: false, lastSync: null, lastError: '', deviceState: null, processedEventKeys: [] },
+    baseline: defaultBaseline,
+    analysisWindow: [],
+    riskResult: { present: null, change: null, presentLevel: null, changeLevel: null, indicators: { R7: null, F7: null, Mt: null, Lt: null, muL: null, sigmaL: null, delta: null }, currentDay: null, unit: '초' }
+  };
+
+  let state = loadState();
+  let timer = null;
+  let selectedTrendDay = null;
+  let trendLastRenderedKey = "";
+  let firebaseEventSource = null;
+  let firebaseEventStreamKey = "";
+
+  // 프로토타입 시간 기준: 나중에 이 값만 바꾸면 사용자 화면 판정이 함께 변경됩니다.
+  const PROTOTYPE_TIMING = Object.freeze({
+    alarmStarts: [0, 10, 20],
+    alarmAudioSeconds: 5,
+    onTimeEndSeconds: 25,
+    missedStartSeconds: 35
+  });
+  const DEVICE_POLL_MS = 2000;
+
+  const GUARDIAN_GUIDANCE_MESSAGES = Object.freeze({
+    stable: Object.freeze({
+      low: { title: '안정', message: '최근 복약 행동은 평소와 유사합니다. 현재의 복약 패턴을 유지해 주세요.' },
+      medium: { title: '안정 · 주기적 확인', message: '현재 뚜렷한 행동 변화는 없지만 일부 복약 취약 요인이 있어 보호자의 주기적인 확인을 권장합니다.' },
+      high: { title: '안정 · 지속 관리 필요', message: '현재 행동 변화는 크지 않지만 기본 복약 취약도가 높아 보호자의 지속적인 관리와 확인이 필요합니다.' }
+    }),
+    caution: Object.freeze({
+      low: { title: '주의', message: '평소와 다른 복약 행동 변화가 관찰되고 있습니다. 최근 복약 기록과 추이를 확인해 주세요.' },
+      medium: { title: '주의 · 관리 필요', message: '복약 취약요인이 있는 상태에서 행동 변화가 나타나고 있습니다. 보호자의 세심한 확인과 지속적인 관찰을 권장합니다.' },
+      high: { title: '주의 · 집중 관리', message: '높은 기본 취약도와 함께 복약 행동 변화가 관찰되고 있습니다. 보호자의 적극적인 확인과 관리가 필요합니다.' }
+    }),
+    observe: Object.freeze({
+      low: { title: '집중관찰', message: '평소 대비 뚜렷한 복약 행동 변화가 관찰되고 있습니다. 변화가 지속되는지 면밀히 확인해 주세요.' },
+      medium: { title: '집중관찰 · 적극 관리', message: '기본 취약요인과 뚜렷한 행동 변화가 함께 확인되어 보호자의 적극적인 관찰과 관리가 필요합니다.' },
+      high: { title: '집중관찰 · 우선 확인 필요', message: '높은 기본 취약도와 뚜렷한 복약 행동 변화가 함께 확인되었습니다. 보호자가 우선적으로 상태와 복약 기록을 확인해 주세요.' }
+    })
+  });
+
+  function clone(obj) { return JSON.parse(JSON.stringify(obj)); }
+  function isEsp32Record(record) {
+    return Boolean(record && (record.source === 'ESP32' || String(record.id || '').startsWith('esp32_')));
+  }
+
+  function isEsp32Log(log) {
+    return Boolean(log && (log.source === 'ESP32' || String(log.message || '').startsWith('[ESP32]')));
+  }
+
+  function isActualBaselineRow(row) {
+    return Boolean(row && /^\d{4}-\d{2}-\d{2}$/.test(String(row.day || '')));
+  }
+
+  function loadState() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+      const base = clone(defaultState);
+      if (!saved) return base;
+
+      const migrated = {
+        ...base,
+        ...saved,
+        dataVersion: 10,
+        baselineSource: 'ESP32',
+        settings: {
+          ...base.settings,
+          ...(saved.settings || {}),
+          schedule: { ...base.settings.schedule, ...(saved.settings?.schedule || {}) },
+          firebase: { ...base.settings.firebase, ...(saved.settings?.firebase || {}) }
+        },
+        cloud: { ...base.cloud, ...(saved.cloud || {}) },
+        profileLabels: { ...base.profileLabels, ...(saved.profileLabels || {}), areas: { ...base.profileLabels.areas, ...(saved.profileLabels?.areas || {}) } },
+        analysisWindow: Array.isArray(saved.analysisWindow) ? saved.analysisWindow : []
+      };
+
+      // v7 알고리즘: 과거 V 가중합 위험점수는 폐기하고 라벨 + 이중 위험도 구조로 전환합니다.
+      if ((saved.dataVersion || 0) < 7) {
+        migrated.riskResult = clone(base.riskResult);
+        migrated.analysisWindow = [];
+      }
+
+      // v6 기기 ID 변경: 기존 기본값 yakson-001만 barrierzero-01로 1회 이전합니다.
+      // 사용자가 이후 직접 지정한 다른 기기 ID는 그대로 유지됩니다.
+      if ((saved.dataVersion || 0) < 6 &&
+          (!saved.settings?.firebase?.deviceId || saved.settings.firebase.deviceId === 'yakson-001')) {
+        migrated.settings.firebase.deviceId = 'barrierzero-01';
+      }
+
+      // 이전 버전의 랜덤 데모·테스트 기록은 제거하고 실제 ESP32 수신 데이터만 유지합니다.
+      migrated.doseRecords = Array.isArray(saved.doseRecords)
+        ? saved.doseRecords.filter(isEsp32Record).map(record => ({ ...record, source: 'ESP32' }))
+        : [];
+      migrated.logs = Array.isArray(saved.logs)
+        ? saved.logs.filter(isEsp32Log).map(log => ({ ...log, source: 'ESP32' }))
+        : [];
+      migrated.guardianLogs = Array.isArray(saved.guardianLogs)
+        ? saved.guardianLogs.filter(isEsp32Log).map(log => ({ ...log, source: 'ESP32' }))
+        : [];
+      migrated.baseline = Array.isArray(saved.baseline)
+        ? saved.baseline.filter(isActualBaselineRow).slice(-7)
+        : [];
+      migrated.session = saved.session?.source === 'ESP32' ? saved.session : null;
+      migrated.pendingApproval = null;
+      migrated.errorSimulation = null;
+
+      // 과거 단일 위험점수는 사용하지 않습니다. 실제 ESP32 기록으로 다시 계산합니다.
+      if (!migrated.riskResult || !Object.prototype.hasOwnProperty.call(migrated.riskResult, 'present')) migrated.riskResult = clone(base.riskResult);
+
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(migrated));
+      return migrated;
+    } catch {
+      return clone(defaultState);
+    }
+  }
+  function saveState() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+
+  function nowText() {
+    return new Intl.DateTimeFormat('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }).format(new Date());
+  }
+  function dateText() {
+    return new Intl.DateTimeFormat('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' }).format(new Date());
+  }
+  function addLog(message, type = 'info', guardian = false) {
+    const item = { time: nowText(), message, type };
+    (guardian ? state.guardianLogs : state.logs).unshift(item);
+    if (guardian) state.guardianLogs = state.guardianLogs.slice(0, 60);
+    else state.logs = state.logs.slice(0, 80);
+    saveState();
+    renderLogs();
+  }
+  function addBothLogs(message, type = 'info') {
+    addLog(message, type, false);
+    addLog(message, type, true);
+  }
+
+  function sessionStatusLabel(status) {
+    const map = {
+      SCHEDULED: '복약 예정', AVAILABLE: '복약 가능', ON_TIME_WINDOW: '정시 수령 구간', LATE_WINDOW: '지연 수령 구간', DISPENSING: '배출 진행 중',
+      DISPENSED: '약 배출 완료', RECEIVED_ON_TIME: '정시 수령', RECEIVED_LATE: '지연 수령',
+      MISSED: '미수령', ERROR: '기기 오류', RECEIVED_AFTER_MISSED: '미수령 후 수령'
+    };
+    return map[status] || status;
+  }
+
+  function startSession() {
+    // 테스트 센터 전용 로컬 회차입니다. 사용자 화면의 실제 회차는 ESP32 데이터로만 생성됩니다.
+    state.session = {
+      id: `LOCAL_TEST_${Date.now()}`,
+      label: '테스트 복약 회차',
+      source: 'LOCAL_TEST',
+      status: 'AVAILABLE',
+      elapsed: 0,
+      t0: Date.now(),
+      notifications: { t0: true, m10: false, m20: false, m25: false, m35: false },
+      dispensed: false,
+      received: false,
+      retryApproved: false,
+      errorType: null,
+      demoMode: true
+    };
+    addLog('테스트 회차를 시작했습니다.', 'info');
+    saveState();
+    renderAll();
+    startTimer();
+  }
+
+  function startTimer() {
+    if (timer) clearInterval(timer);
+    timer = setInterval(() => {
+      if (!state.session || state.session.source !== 'LOCAL_TEST' || ['RECEIVED_ON_TIME','RECEIVED_LATE','RECEIVED_AFTER_MISSED','MISSED','ERROR'].includes(state.session.status)) return;
+      state.session.elapsed += 1; // 테스트 센터에서는 1초가 프로토타입 1초입니다.
+      processTimeRules();
+      saveState();
+      renderSession();
+    }, 1000);
+  }
+
+  function setElapsed(minute) {
+    if (!state.session) startSession();
+    state.session.elapsed = Number(minute);
+    processTimeRules();
+    saveState();
+    renderAll();
+  }
+
+  function processTimeRules() {
+    const s = state.session;
+    if (!s || s.source !== 'LOCAL_TEST') return;
+    if (s.elapsed >= 10 && !s.notifications.m10 && !s.received) {
+      s.notifications.m10 = true;
+      addLog('10초: 두 번째 음성·LED 알람이 시작되었습니다.', 'warning');
+    }
+    if (s.elapsed >= 20 && !s.notifications.m20 && !s.received) {
+      s.notifications.m20 = true;
+      addLog('20초: 세 번째 음성·LED 알람이 시작되었습니다.', 'warning');
+    }
+    if (s.elapsed >= PROTOTYPE_TIMING.onTimeEndSeconds && !s.notifications.m25 && !s.received) {
+      s.notifications.m25 = true;
+      addLog('25초: 지연 수령 판정 구간으로 전환되었습니다.', 'warning');
+    }
+    if (s.elapsed >= PROTOTYPE_TIMING.missedStartSeconds && !s.notifications.m35 && !s.received) {
+      s.notifications.m35 = true;
+      s.status = 'MISSED';
+      addBothLogs('35초 동안 버튼 입력이 없어 미수령으로 처리했습니다.', 'danger');
+      recordDose('MISSED', null, s.elapsed, true);
+    }
+  }
+
+  function requestDispense() {
+    const s = state.session;
+    if (!s) return;
+    if (!['AVAILABLE'].includes(s.status)) {
+      addLog('중복 또는 비정상 배출 요청이 차단되었습니다.', 'danger');
+      addLog('동일 회차의 반복 배출 요청이 감지되었습니다.', 'warning', true);
+      return;
+    }
+    s.status = 'DISPENSING';
+    addLog('회차 잠금 후 약 배출 명령을 실행합니다.', 'info');
+    renderSession();
+    setTimeout(() => {
+      if (!state.session || state.session.status !== 'DISPENSING') return;
+      state.session.status = 'DISPENSED';
+      state.session.dispensed = true;
+      addLog('약포지 배출이 완료되었습니다.', 'success');
+      saveState();
+      renderAll();
+    }, 700);
+  }
+
+  function confirmReceive() {
+    const s = state.session;
+    if (!s) return;
+    if (!s.dispensed && s.status !== 'MISSED') {
+      addLog('약 배출 전에는 수령 확인을 할 수 없습니다.', 'warning');
+      return;
+    }
+    if (s.received) {
+      addLog('이미 수령된 회차입니다. 중복 입력을 차단했습니다.', 'danger');
+      return;
+    }
+    s.received = true;
+    if (s.elapsed <= PROTOTYPE_TIMING.onTimeEndSeconds) {
+      s.status = 'RECEIVED_ON_TIME';
+      addLog(`${s.elapsed}초에 버튼 반응이 확인되었습니다. 정시 수령으로 기록했습니다.`, 'success');
+      recordDose('RECEIVED_ON_TIME', null, s.elapsed, true);
+    } else if (s.elapsed < PROTOTYPE_TIMING.missedStartSeconds) {
+      s.status = 'RECEIVED_LATE';
+      addLog(`${s.elapsed}초에 버튼 반응이 확인되었습니다. 지연 수령으로 기록했습니다.`, 'warning');
+      recordDose('RECEIVED_LATE', null, s.elapsed, true);
+    } else {
+      s.status = 'RECEIVED_AFTER_MISSED';
+      addBothLogs(`미수령 처리 후 ${s.elapsed}초에 버튼 반응이 확인되었습니다.`, 'warning');
+      recordDose('RECEIVED_AFTER_MISSED', null, s.elapsed, true);
+    }
+    saveState();
+    renderAll();
+  }
+
+  function recordDose(status, responseMinutes = null, responseSeconds = null, demoMode = false) {
+    if (!state.session) return;
+    if (state.doseRecords.some(r => r.id === state.session.id && r.status === status)) return;
+    state.doseRecords.unshift({
+      id: state.session.id,
+      label: state.session.label,
+      slot: state.session.slot || null,
+      date: new Date().toISOString().slice(0, 10),
+      status,
+      responseMinutes,
+      responseSeconds,
+      demoMode,
+      time: nowText()
+    });
+    state.doseRecords = state.doseRecords.slice(0, 100);
+    saveState();
+  }
+
+  function triggerHardwareError() {
+    if (!state.session) startSession();
+    const type = document.getElementById('hardwareErrorType').value;
+    const labels = {
+      NO_FEED: '미이송', SLIP: '미끄러짐', OVERFEED: '과이송', LINE_NOT_FOUND: '절취선 미검출',
+      DOUBLE_LINE: '이중 절취선 감지', CUT_FAILURE: '절단 실패', OUTLET_JAM: '배출구 걸림'
+    };
+    state.errorSimulation = { type, label: labels[type], retryCount: 1, pending: true };
+    state.session.status = 'ERROR';
+    state.session.errorType = type;
+    addLog(`${labels[type]} 오류가 감지되었습니다. 자동 복구 1회를 수행합니다.`, 'danger');
+    saveState();
+    renderAll();
+  }
+
+  function resolveError(success) {
+    const e = state.errorSimulation;
+    if (!e || !e.pending) return;
+    e.pending = false;
+    if (success) {
+      state.session.status = 'AVAILABLE';
+      state.session.errorType = null;
+      addLog(`${e.label} 자동 복구에 성공했습니다. 정상 작동을 재개합니다.`, 'success');
+      state.errorSimulation = null;
+    } else {
+      addBothLogs(`${e.label} 자동 복구에 실패했습니다. 기기 작동을 중단하고 보호자에게 알렸습니다.`, 'danger');
+      state.pendingApproval = { sessionId: state.session.id, reason: e.label, createdAt: nowText() };
+      state.errorSimulation = null;
+    }
+    saveState();
+    renderAll();
+  }
+
+  function approveRetry(approved) {
+    if (!state.pendingApproval || !state.session) return;
+    if (approved) {
+      state.session.status = 'AVAILABLE';
+      state.session.retryApproved = true;
+      state.session.errorType = null;
+      addBothLogs('보호자가 재배출 1회를 승인했습니다.', 'success');
+    } else {
+      addBothLogs('보호자가 재배출 요청을 거절했습니다.', 'warning');
+    }
+    state.pendingApproval = null;
+    saveState();
+    renderAll();
+  }
+
+  function normalizeDatabaseUrl(url) {
+    return String(url || '').trim().replace(/\/+$/, '');
+  }
+
+  function cloudConfigured() {
+    return Boolean(normalizeDatabaseUrl(state.settings.firebase.databaseUrl) && String(state.settings.firebase.deviceId || '').trim());
+  }
+
+  function cloudUrl(path) {
+    const base = normalizeDatabaseUrl(state.settings.firebase.databaseUrl);
+    const cleanPath = String(path || '').replace(/^\/+|\/+$/g, '');
+    return `${base}/${cleanPath}.json`;
+  }
+
+  async function cloudRequest(path, options = {}) {
+    if (!cloudConfigured()) throw new Error('Firebase URL과 기기 ID를 먼저 설정해 주세요.');
+    const response = await fetch(cloudUrl(path), {
+      ...options,
+      headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+      cache: 'no-store'
+    });
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`Firebase ${response.status}: ${text || response.statusText}`);
+    }
+    const text = await response.text();
+    return text ? JSON.parse(text) : null;
+  }
+
+  function readScheduleInputs() {
+    return {
+      morning: { enabled: document.getElementById('morningEnabled').checked, time: document.getElementById('morningTime').value || '08:00', label: '아침' },
+      lunch: { enabled: document.getElementById('lunchEnabled').checked, time: document.getElementById('lunchTime').value || '13:00', label: '점심' },
+      dinner: { enabled: document.getElementById('dinnerEnabled').checked, time: document.getElementById('dinnerTime').value || '19:00', label: '저녁' }
+    };
+  }
+
+  async function syncScheduleToCloud(showLog = true) {
+    if (!cloudConfigured()) {
+      document.getElementById('scheduleSyncMessage').textContent = '브라우저에는 저장됐지만 Firebase 연동 정보가 없어 ESP32에는 전송되지 않았습니다.';
+      return false;
+    }
+    const deviceId = String(state.settings.firebase.deviceId).trim();
+    const payload = {
+      ...state.settings.schedule,
+      timezone: 'Asia/Seoul',
+      updatedAt: new Date().toISOString(),
+      version: Date.now(),
+      onTimeLimitMinutes: state.settings.onTimeLimit,
+      missedLimitMinutes: state.settings.missedLimit
+    };
+    try {
+      await cloudRequest(`devices/${encodeURIComponent(deviceId)}/config/schedule`, { method: 'PUT', body: JSON.stringify(payload) });
+      state.cloud.connected = true;
+      state.cloud.lastSync = new Date().toISOString();
+      state.cloud.lastError = '';
+      saveState();
+      document.getElementById('scheduleSyncMessage').textContent = `복약 알람 시간이 ESP32용 Firebase 경로에 전송되었습니다. · ${nowText()}`;
+      if (showLog) addLog('보호자가 설정한 아침·점심·저녁 복약 알람 시간을 ESP32에 전송했습니다.', 'success', true);
+      renderCloudStatus();
+      return true;
+    } catch (error) {
+      state.cloud.connected = false;
+      state.cloud.lastError = error.message;
+      saveState();
+      document.getElementById('scheduleSyncMessage').textContent = `전송 실패: ${error.message}`;
+      renderCloudStatus();
+      return false;
+    }
+  }
+
+  async function saveSchedule() {
+    state.settings.schedule = readScheduleInputs();
+    saveState();
+    renderSchedule();
+    addLog('아침·점심·저녁 복약 알람 시간을 저장했습니다.', 'info', true);
+    await syncScheduleToCloud(false);
+  }
+
+  function cloudElapsedSeconds(deviceState) {
+    if (!deviceState) return 0;
+    const response = Number(deviceState.responseSeconds);
+    if (Number.isFinite(response) && response >= 0 && ['DISPENSING','DISPENSED'].includes(deviceState.status)) return response;
+    const started = Number(deviceState.alarmStartedEpoch);
+    if (Number.isFinite(started) && started > 0) return Math.max(0, Math.floor(Date.now() / 1000 - started));
+    const reported = Number(deviceState.elapsedSeconds);
+    return Number.isFinite(reported) ? Math.max(0, reported) : 0;
+  }
+
+  function syncSessionFromDeviceState(deviceState) {
+    if (!deviceState || (!deviceState.doseId && deviceState.status === 'IDLE')) {
+      state.session = null;
+      return;
+    }
+
+    const elapsedSeconds = cloudElapsedSeconds(deviceState);
+    const rawStatus = String(deviceState.status || 'IDLE');
+    const responseStatus = String(deviceState.responseStatus || '');
+    let displayStatus;
+
+    if (rawStatus === 'MISSED' || elapsedSeconds >= PROTOTYPE_TIMING.missedStartSeconds && !responseStatus) {
+      displayStatus = 'MISSED';
+    } else if (responseStatus) {
+      displayStatus = responseStatus;
+    } else if (rawStatus === 'ERROR' || rawStatus === 'DISPENSE_ERROR') {
+      displayStatus = 'ERROR';
+    } else if (elapsedSeconds > PROTOTYPE_TIMING.onTimeEndSeconds) {
+      displayStatus = 'LATE_WINDOW';
+    } else if (['ALARM_PLAYING','ALARM_GAP','WAITING_BUTTON'].includes(rawStatus)) {
+      displayStatus = 'ON_TIME_WINDOW';
+    } else if (rawStatus === 'DISPENSING') {
+      displayStatus = 'DISPENSING';
+    } else if (rawStatus === 'DISPENSED') {
+      displayStatus = responseStatus || 'DISPENSED';
+    } else {
+      displayStatus = 'SCHEDULED';
+    }
+
+    const slotLabels = { morning: '아침', lunch: '점심', dinner: '저녁' };
+    state.session = {
+      id: deviceState.doseId || `ESP32_${Date.now()}`,
+      source: 'ESP32',
+      label: `${slotLabels[deviceState.activeSlot] || '현재'} 복약 회차`,
+      slot: deviceState.activeSlot || null,
+      status: displayStatus,
+      hardwareStatus: rawStatus,
+      detail: deviceState.detail || '',
+      elapsed: elapsedSeconds,
+      t0Epoch: Number(deviceState.alarmStartedEpoch || 0),
+      responseSeconds: Number.isFinite(Number(deviceState.responseSeconds)) ? Number(deviceState.responseSeconds) : null,
+      responseMinutes: Number.isFinite(Number(deviceState.responseMinutes)) && Number(deviceState.responseMinutes) >= 0 ? Number(deviceState.responseMinutes) : null,
+      responseStatus,
+      demoMode: deviceState.demoMode !== false,
+      dispensed: rawStatus === 'DISPENSED',
+      received: Boolean(responseStatus),
+      errorType: deviceState.errorCode || null,
+      notifications: {
+        t0: elapsedSeconds >= 0,
+        m10: elapsedSeconds >= 10,
+        m20: elapsedSeconds >= 20,
+        m25: elapsedSeconds >= PROTOTYPE_TIMING.onTimeEndSeconds,
+        m35: elapsedSeconds >= PROTOTYPE_TIMING.missedStartSeconds || rawStatus === 'MISSED'
+      }
+    };
+  }
+
+  function buildDailyMetricsFromRecords() {
+    const enabledSlots = Object.entries(state.settings.schedule)
+      .filter(([, value]) => value?.enabled)
+      .map(([key]) => key);
+    const expectedCount = Math.max(1, enabledSlots.length);
+    const terminal = new Set(['RECEIVED_ON_TIME','RECEIVED_LATE','RECEIVED_AFTER_MISSED','MISSED']);
+    const grouped = new Map();
+
+    state.doseRecords.forEach(record => {
+      if (!record.date || !record.slot || !terminal.has(record.status)) return;
+      if (!grouped.has(record.date)) grouped.set(record.date, new Map());
+      grouped.get(record.date).set(record.slot, record);
+    });
+
+    const completed = [];
+    Array.from(grouped.keys()).sort().forEach(date => {
+      const slotMap = grouped.get(date);
+      if (!enabledSlots.every(slot => slotMap.has(slot))) return;
+      const rows = enabledSlots.map(slot => slotMap.get(slot));
+      const demoMode = rows.some(row => row.demoMode);
+      const responseValues = rows
+        .filter(row => row.status !== 'MISSED')
+        .map(row => demoMode ? Number(row.responseSeconds) : Number(row.responseMinutes))
+        .filter(value => Number.isFinite(value) && value >= 0);
+      const L = responseValues.length ? mean(responseValues) : null;
+      // 35초/60분 이후 반응(RECEIVED_AFTER_MISSED)도 이미 미수령 판정을 통과했으므로 미수령으로 집계합니다.
+      const missedCount = rows.filter(row => row.status === 'MISSED' || row.status === 'RECEIVED_AFTER_MISSED').length;
+      const M = missedCount / expectedCount;
+      completed.push({
+        day: date,
+        L: Number.isFinite(L) ? Number(L.toFixed(2)) : null,
+        missedCount,
+        expectedCount,
+        M: Number(M.toFixed(3)),
+        demoMode
+      });
+    });
+    return completed;
+  }
+
+  function loadEsp32Metrics(silent = false) {
+    const metrics = buildDailyMetricsFromRecords();
+    state.riskResult = calculateRiskFromMetrics(metrics);
+    saveState();
+    renderBaseline();
+    renderRisk();
+    renderReactionTrend();
+    const message = document.getElementById('esp32MetricMessage');
+    if (!metrics.length) message.textContent = '아직 ESP32에서 완료된 복약 일자 데이터가 없습니다.';
+    else if (metrics.length < 7) message.textContent = `ESP32 완료 일자 ${metrics.length}일이 확인되었습니다. P_present 계산까지 ${7-metrics.length}일이 더 필요합니다.`;
+    else if (metrics.length === 7) message.textContent = '실제 ESP32 기록 7일로 P_present가 계산되었습니다. 8번째 완료일부터 P_change도 계산됩니다.';
+    else message.textContent = `${metrics.at(-1).day} 데이터까지 반영했습니다. P_present=최근 7일, P_change=직전 7일 기준선 대비 현재 반응시간입니다.`;
+    if (!silent) renderAll();
+  }
+
+
+  function ingestCloudEvents(eventNode) {
+    if (!eventNode || typeof eventNode !== 'object') return;
+    const processed = new Set(state.cloud.processedEventKeys || []);
+    const entries = Object.entries(eventNode)
+      .map(([key, value]) => ({ key, ...(value || {}) }))
+      .sort((a, b) => Number(a.epoch || 0) - Number(b.epoch || 0));
+
+    const statusEvents = new Set(['RECEIVED_ON_TIME','RECEIVED_LATE','RECEIVED_AFTER_MISSED','MISSED','DISPENSE_ERROR']);
+    const slotLabels = { morning: '아침', lunch: '점심', dinner: '저녁' };
+
+    entries.forEach(event => {
+      if (processed.has(event.key)) return;
+      processed.add(event.key);
+
+      const typeClass = event.type === 'MISSED' || event.type === 'DISPENSE_ERROR' ? 'danger'
+        : event.type === 'RECEIVED_LATE' || event.type === 'RECEIVED_AFTER_MISSED' ? 'warning'
+        : event.type === 'RECEIVED_ON_TIME' || event.type === 'DISPENSED' ? 'success' : 'info';
+
+      const cloudLog = {
+        source: 'ESP32',
+        eventKey: event.key,
+        deviceId: event.deviceId || state.settings.firebase.deviceId,
+        date: event.date || null,
+        time: event.time || nowText(),
+        message: `[ESP32] ${event.message || event.type || '이벤트 수신'}`,
+        type: typeClass
+      };
+      state.guardianLogs.unshift(cloudLog);
+      state.logs.unshift(cloudLog);
+
+      if (statusEvents.has(event.type)) {
+        const recordId = `esp32_${event.date || 'unknown'}_${event.slot || event.key}`;
+        const status = event.type === 'DISPENSE_ERROR' ? 'ERROR' : event.type;
+        const record = {
+          id: recordId,
+          source: 'ESP32',
+          deviceId: event.deviceId || state.settings.firebase.deviceId,
+          label: `${slotLabels[event.slot] || event.slot || '복약'} 회차`,
+          slot: event.slot || null,
+          status,
+          responseMinutes: Number.isFinite(Number(event.responseMinutes)) ? Number(event.responseMinutes) : null,
+          responseSeconds: Number.isFinite(Number(event.responseSeconds)) ? Number(event.responseSeconds) : null,
+          demoMode: Boolean(event.demoMode),
+          date: event.date || null,
+          time: event.time || nowText()
+        };
+        const existingIndex = state.doseRecords.findIndex(item => item.id === recordId);
+        if (existingIndex >= 0) state.doseRecords[existingIndex] = record;
+        else state.doseRecords.unshift(record);
+      }
+    });
+
+    state.cloud.processedEventKeys = Array.from(processed).slice(-200);
+    state.guardianLogs = state.guardianLogs.slice(0, 60);
+    state.logs = state.logs.slice(0, 80);
+    state.doseRecords = state.doseRecords.slice(0, 100);
+    loadEsp32Metrics(true);
+  }
+
+  function setTrendRealtimeBadge(mode, detail = '') {
+    const badge = document.getElementById('trendRealtimeBadge');
+    if (!badge) return;
+    badge.className = 'badge';
+    if (mode === 'live') {
+      badge.classList.add('badge-normal');
+      badge.textContent = detail || 'Firebase 실시간 연결됨';
+    } else if (mode === 'retry') {
+      badge.classList.add('badge-caution');
+      badge.textContent = detail || '실시간 재연결 중 · 2초 폴링 보조';
+    } else if (mode === 'off') {
+      badge.classList.add('badge-muted');
+      badge.textContent = detail || 'Firebase 연동 필요';
+    } else {
+      badge.classList.add('badge-muted');
+      badge.textContent = detail || 'Firebase 실시간 대기';
+    }
+  }
+
+  function stopRealtimeEventStream() {
+    if (firebaseEventSource) {
+      try { firebaseEventSource.close(); } catch (_) {}
+    }
+    firebaseEventSource = null;
+    firebaseEventStreamKey = '';
+  }
+
+  function ingestRealtimeStreamPayload(payload) {
+    if (!payload || typeof payload !== 'object') return;
+    const path = String(payload.path || '/');
+    const data = payload.data;
+    if (data == null) return;
+
+    // 초기 연결 시 / 경로로 기존 이벤트 전체가 전달될 수 있습니다.
+    if (path === '/' && typeof data === 'object' && !Array.isArray(data)) {
+      ingestCloudEvents(data);
+      renderGuardian();
+      renderLogs();
+      renderReactionTrend();
+      return;
+    }
+
+    const parts = path.split('/').filter(Boolean);
+    // 새 이벤트 1건이 /이벤트키 경로로 들어오는 일반적인 경우
+    if (parts.length === 1 && typeof data === 'object' && !Array.isArray(data)) {
+      ingestCloudEvents({ [parts[0]]: data });
+      renderGuardian();
+      renderLogs();
+      renderReactionTrend();
+      return;
+    }
+
+    // 이벤트 내부 필드 단위 patch라면 완성 객체가 아닐 수 있어 안전하게 REST 조회로 보정합니다.
+    if (cloudConfigured()) pollDeviceState(false);
+  }
+
+  function startRealtimeEventStream() {
+    if (!cloudConfigured()) {
+      stopRealtimeEventStream();
+      setTrendRealtimeBadge('off');
+      return;
+    }
+    if (typeof EventSource === 'undefined') {
+      setTrendRealtimeBadge('retry', '브라우저 실시간 스트림 미지원 · 2초 폴링 사용');
+      return;
+    }
+
+    const deviceId = String(state.settings.firebase.deviceId || '').trim();
+    const streamUrl = cloudUrl(`devices/${encodeURIComponent(deviceId)}/events`);
+    const streamKey = `${streamUrl}|${deviceId}`;
+    if (firebaseEventSource && firebaseEventStreamKey === streamKey && firebaseEventSource.readyState !== EventSource.CLOSED) return;
+
+    stopRealtimeEventStream();
+    setTrendRealtimeBadge('waiting', 'Firebase 실시간 연결 중');
+
+    const source = new EventSource(streamUrl);
+    firebaseEventSource = source;
+    firebaseEventStreamKey = streamKey;
+
+    source.onopen = () => {
+      setTrendRealtimeBadge('live', 'Firebase 실시간 연결됨');
+    };
+
+    const handleStreamEvent = event => {
+      try {
+        const payload = JSON.parse(event.data || '{}');
+        ingestRealtimeStreamPayload(payload);
+      } catch (error) {
+        console.warn('Firebase 실시간 이벤트 해석 실패:', error);
+      }
+    };
+
+    source.addEventListener('put', handleStreamEvent);
+    source.addEventListener('patch', handleStreamEvent);
+    source.onerror = () => {
+      // EventSource 자체 재연결 기능을 유지하고, 기존 2초 REST polling도 계속 보조합니다.
+      setTrendRealtimeBadge('retry');
+    };
+  }
+
+  async function pollDeviceState(showMessage = false) {
+    if (!cloudConfigured()) {
+      stopRealtimeEventStream();
+      setTrendRealtimeBadge('off');
+      if (showMessage) alert('설정 화면에서 Firebase URL과 기기 ID를 입력해 주세요.');
+      renderCloudStatus();
+      return;
+    }
+    const deviceId = String(state.settings.firebase.deviceId).trim();
+    try {
+      const [deviceState, eventNode] = await Promise.all([
+        cloudRequest(`devices/${encodeURIComponent(deviceId)}/state`),
+        cloudRequest(`devices/${encodeURIComponent(deviceId)}/events`)
+      ]);
+      state.cloud.connected = true;
+      state.cloud.lastError = '';
+      state.cloud.deviceState = deviceState;
+      startRealtimeEventStream();
+      syncSessionFromDeviceState(deviceState);
+      ingestCloudEvents(eventNode);
+      saveState();
+      renderAll();
+      if (showMessage) document.getElementById('scheduleSyncMessage').textContent = deviceState ? 'ESP32 상태와 최신 이벤트를 Firebase에서 불러왔습니다.' : 'Firebase 연결은 성공했지만 아직 ESP32 상태 데이터가 없습니다.';
+    } catch (error) {
+      state.cloud.connected = false;
+      state.cloud.lastError = error.message;
+      saveState();
+      renderCloudStatus();
+      if (showMessage) document.getElementById('scheduleSyncMessage').textContent = `기기 상태 조회 실패: ${error.message}`;
+    }
+  }
+
+  async function testCloudConnection() {
+    const inputUrl = normalizeDatabaseUrl(document.getElementById('databaseUrl').value);
+    const inputDeviceId = String(document.getElementById('deviceId').value || '').trim();
+    if (!inputUrl || !inputDeviceId) return alert('Realtime Database URL과 기기 ID를 모두 입력해 주세요.');
+    state.settings.firebase.databaseUrl = inputUrl;
+    state.settings.firebase.deviceId = inputDeviceId;
+    saveState();
+    document.getElementById('cloudStatusBox').textContent = 'Firebase 연결을 확인하는 중입니다...';
+    await pollDeviceState(false);
+    if (state.cloud.connected) {
+      document.getElementById('cloudStatusBox').textContent = state.cloud.deviceState
+        ? 'Firebase 연결 성공 · ESP32 상태 데이터가 확인되었습니다.'
+        : 'Firebase 연결 성공 · ESP32가 코드를 실행하면 상태 데이터가 표시됩니다.';
+    } else {
+      document.getElementById('cloudStatusBox').textContent = `Firebase 연결 실패: ${state.cloud.lastError}`;
+    }
+  }
+
+  function saveCloudSettings() {
+    const url = normalizeDatabaseUrl(document.getElementById('databaseUrl').value);
+    const deviceId = String(document.getElementById('deviceId').value || '').trim();
+    if (!url || !deviceId) return alert('Realtime Database URL과 기기 ID를 모두 입력해 주세요.');
+    state.settings.firebase.databaseUrl = url;
+    state.settings.firebase.deviceId = deviceId;
+    state.cloud.connected = false;
+    stopRealtimeEventStream();
+    saveState();
+    renderAll();
+    startRealtimeEventStream();
+    addLog('ESP32·Firebase 연동 설정을 저장했습니다.', 'info', true);
+  }
+
+  function isDeviceOnline(deviceState) {
+    const lastSeenEpoch = Number(deviceState?.lastSeenEpoch ?? deviceState?.epoch);
+    if (!deviceState || !Number.isFinite(lastSeenEpoch) || lastSeenEpoch <= 0) return false;
+    const ageSeconds = Math.floor(Date.now() / 1000) - lastSeenEpoch;
+    return ageSeconds >= 0 && ageSeconds <= 90;
+  }
+
+  function renderSchedule() {
+    const schedule = state.settings.schedule;
+    ['morning','lunch','dinner'].forEach(key => {
+      document.getElementById(`${key}Enabled`).checked = Boolean(schedule[key]?.enabled);
+      document.getElementById(`${key}Time`).value = schedule[key]?.time || ({ morning:'08:00', lunch:'13:00', dinner:'19:00' }[key]);
+    });
+  }
+
+  function renderCloudStatus() {
+    const dot = document.getElementById('deviceConnectionDot');
+    const text = document.getElementById('deviceConnectionText');
+    const box = document.getElementById('cloudStatusBox');
+    if (!dot || !text || !box) return;
+    dot.className = 'connection-dot';
+    if (!cloudConfigured()) {
+      text.textContent = 'ESP32 연동 미설정';
+      box.textContent = 'Realtime Database URL을 입력하면 일정과 ESP32 상태를 동기화할 수 있습니다.';
+      setTrendRealtimeBadge('off');
+      return;
+    }
+    const online = isDeviceOnline(state.cloud.deviceState);
+    if (online) {
+      dot.classList.add('online');
+      text.textContent = `ESP32 온라인 · ${state.cloud.deviceState.status || '상태 확인됨'}`;
+    } else if (state.cloud.connected) {
+      dot.classList.add('offline');
+      text.textContent = state.cloud.deviceState ? 'ESP32 오프라인 또는 응답 지연' : 'Firebase 연결됨 · ESP32 대기';
+    } else {
+      dot.classList.add('offline');
+      text.textContent = 'Firebase 연결 확인 필요';
+    }
+    if (state.cloud.lastError) box.textContent = `최근 오류: ${state.cloud.lastError}`;
+    else if (state.cloud.lastSync) box.textContent = `연동 설정 저장됨 · 최근 일정 전송 ${new Date(state.cloud.lastSync).toLocaleString('ko-KR')}`;
+  }
+
+  function areaRiskLabel(value) {
+    const v = Number(value || 0);
+    if (v >= 3) return '위험';
+    if (v >= 1) return '주의';
+    return '정상';
+  }
+
+  function complexityLabel(value) {
+    const v = Number(value || 0);
+    if (v >= 3) return '상';
+    if (v >= 1) return '중';
+    return '하';
+  }
+
+  function calculateProfileLabels() {
+    const areaKeys = ['cognitive','mobility','sensory','guardian'];
+    const areas = Object.fromEntries(areaKeys.map(key => [key, areaRiskLabel(state.checklist[key])]));
+    const rank = { '정상': 0, '주의': 1, '위험': 2 };
+    const fixed = Object.values(areas).reduce((worst, label) => rank[label] > rank[worst] ? label : worst, '정상');
+    state.profileLabels = { fixed, complexity: complexityLabel(state.checklist.complexity), areas };
+    return state.profileLabels;
+  }
+
+  function mean(arr) { return arr.length ? arr.reduce((a,b) => a+b, 0) / arr.length : null; }
+  function sd(arr) {
+    if (!arr.length) return null;
+    const m = mean(arr);
+    return Math.sqrt(arr.reduce((sum, x) => sum + Math.pow(x-m, 2), 0) / arr.length);
+  }
+
+  function scoreLevel(score) {
+    if (!Number.isFinite(score)) return null;
+    return score >= 70 ? 'risk' : score >= 40 ? 'caution' : 'normal';
+  }
+
+  function calculateRiskFromMetrics(metrics) {
+    const result = clone(defaultState.riskResult);
+    if (!metrics.length) return result;
+    const latest = metrics[metrics.length - 1];
+    result.currentDay = latest.day;
+    result.unit = latest.demoMode ? '초' : '분';
+
+    // 현재 복약관리 P_present: 최근 7개 완료일
+    if (metrics.length >= 7) {
+      const window7 = metrics.slice(-7);
+      const totalMissed = window7.reduce((sum, row) => sum + row.missedCount, 0);
+      const totalExpected = window7.reduce((sum, row) => sum + row.expectedCount, 0);
+      const R7 = totalExpected > 0 ? totalMissed / totalExpected : 0;
+      const F7 = window7.filter(row => row.missedCount > 0).length / 7;
+      const Mt = Number(latest.M || 0);
+      const present = 100 * Math.max(R7, F7, Mt);
+      result.present = Math.min(100, Math.max(0, present));
+      result.presentLevel = scoreLevel(result.present);
+      result.indicators.R7 = R7;
+      result.indicators.F7 = F7;
+      result.indicators.Mt = Mt;
+      state.analysisWindow = window7.map(row => ({ ...row, role: row.day === latest.day ? '현재' : '최근 7일' }));
+    } else {
+      state.analysisWindow = metrics.slice(-7).map(row => ({ ...row, role: '수집 중' }));
+    }
+
+    // 개인 행동변화 P_change: 현재일 Lt vs 직전 7개 완료일의 일평균 반응시간 기준선
+    if (metrics.length >= 8) {
+      const baseline = metrics.slice(-8, -1);
+      const baselineL = baseline.map(row => row.L).filter(Number.isFinite);
+      const Lt = Number(latest.L);
+      state.baseline = baseline.map(row => ({ ...row, role: '개인 기준선' }));
+      if (Number.isFinite(Lt) && baselineL.length === 7) {
+        const muL = mean(baselineL);
+        const sigmaL = sd(baselineL);
+        const delta = Math.max(Lt - muL, 0);
+        let change;
+        if (sigmaL <= 1e-9) change = delta <= 0 ? 0 : 100;
+        else change = 100 * Math.min(delta / (3 * sigmaL), 1);
+        result.change = Math.min(100, Math.max(0, change));
+        result.changeLevel = scoreLevel(result.change);
+        result.indicators.Lt = Lt;
+        result.indicators.muL = muL;
+        result.indicators.sigmaL = sigmaL;
+        result.indicators.delta = delta;
+      }
+    } else {
+      state.baseline = metrics.slice(-7).map(row => ({ ...row, role: '기준선 수집 중' }));
+    }
+    return result;
+  }
+
+  function calculateRisk(silent = false) {
+    const metrics = buildDailyMetricsFromRecords();
+    state.riskResult = calculateRiskFromMetrics(metrics);
+    saveState();
+    renderBaseline();
+    renderRisk();
+    if (!silent) {
+      const message = document.getElementById('esp32MetricMessage');
+      if (!metrics.length) message.textContent = '아직 ESP32에서 완료된 복약 일자 데이터가 없습니다.';
+      else if (metrics.length < 7) message.textContent = `완료일 ${metrics.length}일 수집됨 · P_present 계산까지 ${7-metrics.length}일이 더 필요합니다.`;
+      else if (metrics.length === 7) message.textContent = '최근 7일 데이터로 P_present를 계산했습니다. 다음 완료일부터 P_change 개인 기준선 비교가 시작됩니다.';
+      else message.textContent = `${metrics.at(-1).day} 기준 · P_present는 최근 7일, P_change는 직전 7일 개인 기준선과 현재일을 비교했습니다.`;
+    }
+  }
+
+
+  function slotLabel(slot) {
+    const map = { morning: '아침', lunch: '점심', dinner: '저녁' };
+    return map[slot] || slot || '-';
+  }
+
+  function formatMonthDay(dateString) {
+    const date = new Date(dateString + 'T00:00:00+09:00');
+    if (Number.isNaN(date.getTime())) return dateString;
+    return `${date.getMonth() + 1}/${date.getDate()}`;
+  }
+
+  function weekdayShort(dateString) {
+    const date = new Date(dateString + 'T00:00:00+09:00');
+    if (Number.isNaN(date.getTime())) return '-';
+    return new Intl.DateTimeFormat('ko-KR', { weekday: 'short', timeZone: 'Asia/Seoul' }).format(date).replace('요일', '');
+  }
+
+  function reactionValueLabel(record) {
+    if (!record) return '기록 없음';
+    if (record.status === 'MISSED') return '미수령';
+    if (record.status === 'RECEIVED_AFTER_MISSED') {
+      return record.demoMode && Number.isFinite(record.responseSeconds)
+        ? `미수령 후 ${record.responseSeconds}초`
+        : Number.isFinite(record.responseMinutes)
+          ? `미수령 후 ${record.responseMinutes}분`
+          : '미수령 후 수령';
+    }
+    if (record.demoMode && Number.isFinite(record.responseSeconds)) return `${record.responseSeconds}초`;
+    if (Number.isFinite(record.responseMinutes)) return `${record.responseMinutes}분`;
+    return '반응 없음';
+  }
+
+  function buildTrendSeries() {
+    // 그래프는 위험도용 "완료일"과 별개로, Firebase에서 새 회차가 들어오는 즉시 오늘 값도 갱신합니다.
+    // 미수령(MISSED, RECEIVED_AFTER_MISSED)은 하루 평균 반응시간에서 제외하고 횟수만 따로 표시합니다.
+    const terminal = new Set(['RECEIVED_ON_TIME','RECEIVED_LATE','RECEIVED_AFTER_MISSED','MISSED']);
+    const enabledSlots = Object.entries(state.settings.schedule)
+      .filter(([, value]) => value?.enabled)
+      .map(([key]) => key);
+    const grouped = new Map();
+
+    state.doseRecords
+      .filter(record => isEsp32Record(record) && record.date && record.slot && terminal.has(record.status))
+      .forEach(record => {
+        if (!grouped.has(record.date)) grouped.set(record.date, new Map());
+        grouped.get(record.date).set(record.slot, record);
+      });
+
+    return Array.from(grouped.keys()).sort().slice(-30).map(day => {
+      const slotMap = grouped.get(day);
+      const rows = Array.from(slotMap.values());
+      const demoMode = rows.some(row => row.demoMode);
+      const responseValues = rows
+        .filter(row => row.status !== 'MISSED' && row.status !== 'RECEIVED_AFTER_MISSED')
+        .map(row => demoMode ? Number(row.responseSeconds) : Number(row.responseMinutes))
+        .filter(value => Number.isFinite(value) && value >= 0);
+      const missedCount = rows.filter(row => row.status === 'MISSED' || row.status === 'RECEIVED_AFTER_MISSED').length;
+      const complete = enabledSlots.length ? enabledSlots.every(slot => slotMap.has(slot)) : true;
+      return {
+        day,
+        L: responseValues.length ? Number(mean(responseValues).toFixed(2)) : null,
+        missedCount,
+        expectedCount: Math.max(enabledSlots.length, rows.length, 1),
+        demoMode,
+        complete,
+        labelDate: formatMonthDay(day),
+        weekday: weekdayShort(day),
+        details: Object.fromEntries(slotMap.entries())
+      };
+    });
+  }
+
+  function renderReactionTrendDetail(series) {
+    const box = document.getElementById('trendDayDetail');
+    if (!box) return;
+    if (!series.length) {
+      box.innerHTML = '선택할 실제 완료일 데이터가 없습니다.';
+      return;
+    }
+    const selected = series.find(item => item.day === selectedTrendDay) || series[series.length - 1];
+    selectedTrendDay = selected.day;
+    const enabledSlots = ['morning','lunch','dinner'].filter(slot => state.settings.schedule[slot]?.enabled);
+    const slots = (enabledSlots.length ? enabledSlots : ['morning','lunch','dinner']).map(slot => ({ slot, record: selected.details?.[slot] || null }));
+    const unit = selected.demoMode ? '초' : '분';
+    const avgLabel = Number.isFinite(selected.L) ? `${selected.L.toFixed(2)} ${unit}` : '반응시간 평균 없음';
+    box.innerHTML = `
+      <div class="trend-detail-head">
+        <div>
+          <strong>${selected.day} (${selected.weekday})</strong>
+          <div class="muted small" style="margin-top:4px;">하루 평균 반응시간 ${avgLabel} · 미수령 ${selected.missedCount}회${selected.complete ? '' : ' · 오늘 데이터 수집 중'}</div>
+        </div>
+        <div class="trend-detail-summary">
+          <span class="badge badge-info">평균 ${avgLabel}</span>
+          <span class="badge ${selected.missedCount > 0 ? 'badge-risk' : 'badge-normal'}">미수령 ${selected.missedCount}회</span>
+          ${selected.complete ? '' : '<span class="badge badge-muted">당일 진행 중</span>'}
+        </div>
+      </div>
+      <div class="trend-slot-grid">
+        ${slots.map(({ slot, record }) => {
+          const badgeClass = !record ? 'badge-muted' : record.status === 'MISSED' ? 'badge-risk' : record.status === 'RECEIVED_LATE' || record.status === 'RECEIVED_AFTER_MISSED' ? 'badge-caution' : 'badge-normal';
+          const statusText = record ? sessionStatusLabel(record.status) : '기록 없음';
+          return `
+            <div class="trend-slot-card">
+              <strong>${slotLabel(slot)}</strong>
+              <div><span class="badge ${badgeClass}">${statusText}</span></div>
+              <div class="meta" style="margin-top:8px;">반응시간: ${reactionValueLabel(record)}</div>
+              <div class="meta">기록 시각: ${record ? formatRecordTime(record.time) : '-'}</div>
+            </div>`;
+        }).join('')}
+      </div>`;
+  }
+
+  function renderReactionTrend() {
+    const svg = document.getElementById('reactionTrendSvg');
+    const empty = document.getElementById('trendEmptyState');
+    const rangeBadge = document.getElementById('trendRangeBadge');
+    const unitText = document.getElementById('trendUnitText');
+    const scrollBox = document.getElementById('reactionTrendScroll');
+    if (!svg || !empty || !rangeBadge || !unitText || !scrollBox) return;
+
+    const series = buildTrendSeries();
+    if (!series.length) {
+      empty.style.display = 'block';
+      svg.innerHTML = '';
+      svg.setAttribute('viewBox', '0 0 900 360');
+      rangeBadge.textContent = '그래프 데이터 없음';
+      unitText.textContent = 'Y축: 평균 복약 반응시간';
+      renderReactionTrendDetail([]);
+      return;
+    }
+
+    empty.style.display = 'none';
+    const unit = series[series.length - 1].demoMode ? '초' : '분';
+    unitText.textContent = `Y축: 평균 복약 반응시간(${unit})`;
+    rangeBadge.textContent = `기본 보기 최근 7일 · 전체 ${series.length}일 / 최대 30일`;
+
+    if (!selectedTrendDay || !series.some(item => item.day === selectedTrendDay)) selectedTrendDay = series[series.length - 1].day;
+
+    const finiteValues = series.map(item => item.L).filter(Number.isFinite);
+    const suggestedTop = unit === '초' ? PROTOTYPE_TIMING.missedStartSeconds : Math.max(state.settings.missedLimit, state.settings.onTimeLimit);
+    const yMax = Math.max(suggestedTop, finiteValues.length ? Math.max(...finiteValues) * 1.25 : 0, 5);
+    const left = 64;
+    const top = 22;
+    const bottom = 112;
+    const stepX = 96;
+    const height = 360;
+    const width = Math.max(820, left + 50 + (Math.max(series.length - 1, 0) * stepX));
+    const chartHeight = height - top - bottom;
+    const x = index => left + index * stepX;
+    const y = value => top + chartHeight - ((value / yMax) * chartHeight);
+
+    const gridValues = 5;
+    const grid = [];
+    for (let i = 0; i <= gridValues; i++) {
+      const value = (yMax / gridValues) * i;
+      const py = y(value);
+      grid.push(`<line x1="${left}" y1="${py}" x2="${width - 24}" y2="${py}" stroke="#e8edf6" stroke-width="1" />`);
+      grid.push(`<text x="${left - 12}" y="${py + 4}" text-anchor="end" font-size="11" fill="#72809a">${value.toFixed(value < 10 ? 1 : 0)}</text>`);
+    }
+
+    const segments = [];
+    let currentSegment = [];
+    series.forEach((item, index) => {
+      if (Number.isFinite(item.L)) currentSegment.push(`${x(index)},${y(item.L)}`);
+      else if (currentSegment.length) { segments.push(currentSegment.join(' ')); currentSegment = []; }
+    });
+    if (currentSegment.length) segments.push(currentSegment.join(' '));
+
+    const selectedDay = selectedTrendDay;
+    const lastFiniteIndex = (() => {
+      for (let i = series.length - 1; i >= 0; i--) if (Number.isFinite(series[i].L)) return i;
+      return -1;
+    })();
+
+    const pointMarkup = series.map((item, index) => {
+      const cx = x(index);
+      const isSelected = item.day === selectedDay;
+      const isLatest = index === lastFiniteIndex;
+      const axisDateY = height - 56;
+      const axisWeekY = height - 40;
+      const missedY = height - 18;
+      const point = Number.isFinite(item.L)
+        ? `<circle cx="${cx}" cy="${y(item.L)}" r="${isLatest ? 7 : isSelected ? 6 : 5}" fill="${isSelected ? '#1f4ed8' : isLatest ? '#3157d5' : '#5b7ae5'}" stroke="#fff" stroke-width="2" />`
+        : `<circle cx="${cx}" cy="${top + chartHeight}" r="4" fill="#c6cfdf" stroke="#fff" stroke-width="2" />`;
+      const selectedRing = Number.isFinite(item.L) && isSelected
+        ? `<circle cx="${cx}" cy="${y(item.L)}" r="11" fill="none" stroke="rgba(49,87,213,.18)" stroke-width="8" />`
+        : '';
+      const latestLabel = isLatest && Number.isFinite(item.L)
+        ? `<text x="${cx}" y="${y(item.L) - 14}" text-anchor="middle" font-size="11" font-weight="700" fill="#3157d5">마지막</text>`
+        : '';
+      const missedLabel = item.missedCount > 0
+        ? `<text x="${cx}" y="${missedY}" text-anchor="middle" font-size="11" font-weight="700" fill="#c23643">미수령 ${item.missedCount}회</text>`
+        : '';
+      return `
+        <g data-trend-day="${item.day}" style="cursor:pointer;">
+          <rect x="${cx - 26}" y="${top}" width="52" height="${height - top}" fill="transparent"></rect>
+          ${selectedRing}
+          ${point}
+          ${latestLabel}
+          <text x="${cx}" y="${axisDateY}" text-anchor="middle" font-size="12" font-weight="700" fill="#24324e">${item.labelDate}</text>
+          <text x="${cx}" y="${axisWeekY}" text-anchor="middle" font-size="11" fill="#6d7a91">(${item.weekday})</text>
+          ${missedLabel}
+        </g>`;
+    }).join('');
+
+    svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+    svg.innerHTML = `
+      <rect x="0" y="0" width="${width}" height="${height}" fill="#ffffff"></rect>
+      ${grid.join('')}
+      <line x1="${left}" y1="${top + chartHeight}" x2="${width - 24}" y2="${top + chartHeight}" stroke="#cfd7e6" stroke-width="1.5" />
+      ${segments.map(points => `<polyline points="${points}" fill="none" stroke="#3157d5" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></polyline>`).join('')}
+      ${pointMarkup}
+    `;
+
+    svg.querySelectorAll('[data-trend-day]').forEach(node => {
+      node.addEventListener('click', () => {
+        selectedTrendDay = node.getAttribute('data-trend-day');
+        renderReactionTrend();
+      });
+    });
+
+    renderReactionTrendDetail(series);
+
+    const key = series.map(item => item.day).join('|');
+    if (key !== trendLastRenderedKey) {
+      trendLastRenderedKey = key;
+      requestAnimationFrame(() => {
+        scrollBox.scrollLeft = scrollBox.scrollWidth;
+      });
+    }
+  }
+
+  function renderChecklist() {
+    const container = document.getElementById('checklistContainer');
+    container.innerHTML = checklistDefinitions.map(def => {
+      const current = Number(state.checklist[def.key] || 0);
+      const badge = def.group === 'complexity' ? complexityLabel(current) : areaRiskLabel(current);
+      const badgeClass = def.group === 'complexity' ? 'badge-info' : badge === '위험' ? 'badge-risk' : badge === '주의' ? 'badge-caution' : 'badge-normal';
+      return `
+      <div class="check-row">
+        <div><strong>${def.title}</strong><small>${def.group === 'complexity' ? '복약 특성 영역 · 상·중·하 라벨' : '사용자 기능 영역 · 정상·주의·위험 라벨'}</small><span class="badge ${badgeClass}" style="margin-top:8px;">${badge}</span></div>
+        <select data-check-key="${def.key}">
+          ${def.options.map((o, i) => `<option value="${i}" ${current === i ? 'selected' : ''}>${o}</option>`).join('')}
+        </select>
+      </div>`;
+    }).join('');
+  }
+
+  function renderBaseline() {
+    const body = document.getElementById('baselineTableBody');
+    const metrics = buildDailyMetricsFromRecords();
+    if (!metrics.length) {
+      body.innerHTML = '<tr><td colspan="5" class="muted">아직 ESP32에서 완료된 일자 데이터가 없습니다.</td></tr>';
+      return;
+    }
+    let rows;
+    if (metrics.length >= 8) {
+      const baseDays = new Set(metrics.slice(-8, -1).map(row => row.day));
+      const currentDay = metrics.at(-1).day;
+      rows = metrics.slice(-8).map(row => ({ ...row, role: row.day === currentDay ? '현재' : baseDays.has(row.day) ? '개인 기준선' : '최근' }));
+    } else {
+      rows = metrics.slice(-7).map(row => ({ ...row, role: metrics.length >= 7 ? 'P_present 7일' : '수집 중' }));
+    }
+    body.innerHTML = rows.map(row => `
+      <tr>
+        <td>${row.role}</td>
+        <td>${row.day}</td>
+        <td>${Number.isFinite(row.L) ? `${row.L.toFixed(2)} ${row.demoMode ? '초' : '분'}` : '반응 없음'}</td>
+        <td>${row.missedCount}/${row.expectedCount}</td>
+        <td>${(row.M * 100).toFixed(1)}%</td>
+      </tr>`).join('');
+  }
+
+  function readBaselineInputs() {}
+
+  function getDisplayElapsed(s) {
+    if (!s) return 0;
+    if (s.source === 'ESP32' && s.t0Epoch > 0 && !['RECEIVED_ON_TIME','RECEIVED_LATE','RECEIVED_AFTER_MISSED','MISSED','ERROR'].includes(s.status)) {
+      return Math.max(0, Math.floor(Date.now() / 1000 - s.t0Epoch));
+    }
+    if (Number.isFinite(Number(s.responseSeconds)) && s.responseSeconds >= 0 && s.source === 'ESP32') return Number(s.responseSeconds);
+    return Number(s.elapsed || 0);
+  }
+
+  function renderSession() {
+    const s = state.session;
+    const statusText = document.getElementById('userStatusText');
+    const detail = document.getElementById('userStatusDetail');
+    const elapsed = document.getElementById('elapsedValue');
+    const stage = document.getElementById('stageValue');
+    const progress = document.getElementById('sessionProgress');
+
+    if (!s) {
+      statusText.textContent = '복약 예정';
+      detail.textContent = cloudConfigured()
+        ? 'ESP32의 다음 아침·점심·저녁 복약 알람을 기다리고 있습니다.'
+        : '설정 화면에서 Firebase URL과 기기 ID를 입력해 ESP32를 연결해 주세요.';
+      elapsed.textContent = '0초';
+      stage.textContent = '대기';
+      progress.style.width = '0%';
+      renderNotificationTimeline();
+      return;
+    }
+
+    const elapsedSeconds = getDisplayElapsed(s);
+    s.elapsed = elapsedSeconds;
+    let status = s.status;
+    if (!s.responseStatus && !['MISSED','ERROR'].includes(status)) {
+      if (elapsedSeconds >= PROTOTYPE_TIMING.missedStartSeconds) status = 'MISSED';
+      else if (elapsedSeconds > PROTOTYPE_TIMING.onTimeEndSeconds) status = 'LATE_WINDOW';
+      else if (['ALARM_PLAYING','ALARM_GAP','WAITING_BUTTON','ON_TIME_WINDOW'].includes(s.hardwareStatus || status)) status = 'ON_TIME_WINDOW';
+    }
+
+    statusText.textContent = sessionStatusLabel(status);
+    elapsed.textContent = s.demoMode === false ? `${Math.floor(elapsedSeconds / 60)}분` : `${elapsedSeconds}초`;
+    stage.textContent = elapsedSeconds >= PROTOTYPE_TIMING.missedStartSeconds
+      ? '미수령'
+      : elapsedSeconds > PROTOTYPE_TIMING.onTimeEndSeconds ? '지연 수령 구간' : '정시 수령 구간';
+    progress.style.width = `${Math.min(100, elapsedSeconds / PROTOTYPE_TIMING.missedStartSeconds * 100)}%`;
+
+    const response = Number.isFinite(Number(s.responseSeconds)) ? Number(s.responseSeconds) : elapsedSeconds;
+    const details = {
+      SCHEDULED: 'ESP32가 설정된 복약 시간을 기다리고 있습니다.',
+      ON_TIME_WINDOW: '음성·LED 알람이 진행 중입니다. 25초 이내 버튼 입력은 정시 수령으로 판정됩니다.',
+      LATE_WINDOW: '정시 수령 구간이 종료되었습니다. 35초 전 버튼 입력은 지연 수령으로 판정됩니다.',
+      DISPENSING: `버튼 입력이 확인되어 약포지를 배출하고 있습니다. · 반응시간 ${response}초`,
+      DISPENSED: '초음파 센서가 약포지 도착을 확인했습니다. 약포지 배출이 완료되었습니다.',
+      RECEIVED_ON_TIME: `${response}초에 버튼 반응이 확인되었습니다. · 정시 수령`,
+      RECEIVED_LATE: `${response}초에 버튼 반응이 확인되었습니다. · 지연 수령`,
+      MISSED: '35초 동안 버튼 입력이 없어 미수령으로 처리하고 보호자에게 알렸습니다.',
+      ERROR: `기기 오류: ${s.errorType || s.detail || '오류 확인 중'}`,
+      RECEIVED_AFTER_MISSED: `미수령 처리 이후 ${response}초에 버튼 반응이 확인되었습니다.`
+    };
+    detail.textContent = details[status] || s.detail || 'ESP32 복약 상태를 확인 중입니다.';
+    renderNotificationTimeline();
+  }
+
+  function renderNotificationTimeline() {
+    const s = state.session;
+    const elapsedSeconds = getDisplayElapsed(s);
+    const container = document.getElementById('notificationTimeline');
+    const items = [
+      { sec: 0, label: '0초', text: '첫 번째 음성·LED 알람 시작', done: !!s && elapsedSeconds >= 0 },
+      { sec: 10, label: '+10초', text: '두 번째 음성·LED 알람 시작', done: !!s && elapsedSeconds >= 10 },
+      { sec: 20, label: '+20초', text: '세 번째 음성·LED 알람 시작', done: !!s && elapsedSeconds >= 20 },
+      { sec: 25, label: '+25초', text: '지연 수령 판정 구간 시작', done: !!s && elapsedSeconds >= PROTOTYPE_TIMING.onTimeEndSeconds },
+      { sec: 35, label: '+35초', text: '미수령 처리·보호자 알림', done: !!s && (elapsedSeconds >= PROTOTYPE_TIMING.missedStartSeconds || s.status === 'MISSED') }
+    ];
+    container.innerHTML = items.map((item, idx) => {
+      const cls = item.done ? (idx === 4 ? 'danger' : idx >= 3 ? 'alert' : 'done') : '';
+      return `<div class="timeline-row ${cls}"><strong>${item.label}</strong><span>${item.text}</span><span class="badge ${item.done ? 'badge-info' : 'badge-muted'}">${item.done ? '완료' : '대기'}</span></div>`;
+    }).join('');
+  }
+
+  function renderLogs() {
+    const build = logs => {
+      const actual = (logs || []).filter(isEsp32Log);
+      return actual.length
+        ? actual.map(log => `<div class="log-item ${log.type}"><div class="log-time">${formatRecordTime(log.time)}</div>${log.message}</div>`).join('')
+        : '<div class="muted small">아직 ESP32에서 수신된 실제 이벤트가 없습니다.</div>';
+    };
+    document.getElementById('userLogs').innerHTML = build(state.logs);
+    document.getElementById('guardianLogs').innerHTML = build(state.guardianLogs);
+  }
+
+  function todayKstDate() {
+    const parts = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit'
+    }).formatToParts(new Date());
+    const map = Object.fromEntries(parts.map(part => [part.type, part.value]));
+    return `${map.year}-${map.month}-${map.day}`;
+  }
+
+  function formatRecordTime(value) {
+    if (!value) return '-';
+    const date = new Date(value);
+    if (!Number.isNaN(date.getTime())) {
+      return new Intl.DateTimeFormat('ko-KR', {
+        timeZone: 'Asia/Seoul', hour: '2-digit', minute: '2-digit', second: '2-digit'
+      }).format(date);
+    }
+    return String(value);
+  }
+
+  function renderGuardian() {
+    const today = todayKstDate();
+    const todayRecords = (state.doseRecords || [])
+      .filter(record => isEsp32Record(record) && record.date === today)
+      .sort((a, b) => String(a.time || '').localeCompare(String(b.time || '')));
+
+    const counts = { on: 0, late: 0, missed: 0, error: 0 };
+    todayRecords.forEach(r => {
+      if (r.status === 'RECEIVED_ON_TIME') counts.on++;
+      else if (r.status === 'RECEIVED_LATE' || r.status === 'RECEIVED_AFTER_MISSED') counts.late++;
+      else if (r.status === 'MISSED') counts.missed++;
+      else if (r.status === 'ERROR') counts.error++;
+    });
+    document.getElementById('guardianOnTime').textContent = counts.on;
+    document.getElementById('guardianLate').textContent = counts.late;
+    document.getElementById('guardianMissed').textContent = counts.missed;
+    document.getElementById('guardianErrors').textContent = counts.error;
+
+    const body = document.getElementById('doseTableBody');
+    body.innerHTML = todayRecords.length ? todayRecords.map(r => `
+      <tr><td>${r.label}</td><td>${sessionStatusLabel(r.status)}</td><td>${r.demoMode && r.responseSeconds != null ? `${r.responseSeconds}초 (시연)` : `${r.responseMinutes ?? '-'}분`}</td><td>${formatRecordTime(r.time)}</td></tr>
+    `).join('') : '<tr><td colspan="4" class="muted">오늘 ESP32에서 수신된 복약 완료 기록이 없습니다.</td></tr>';
+
+    const panel = document.getElementById('approvalPanel');
+    const approve = document.getElementById('approveRetryBtn');
+    const reject = document.getElementById('rejectRetryBtn');
+    if (state.pendingApproval) {
+      panel.textContent = `재배출 승인 요청 · 사유: ${state.pendingApproval.reason} · 요청 시각: ${state.pendingApproval.createdAt}`;
+      approve.disabled = false; reject.disabled = false;
+    } else {
+      panel.textContent = '현재 승인 대기 중인 요청이 없습니다.';
+      approve.disabled = true; reject.disabled = true;
+    }
+  }
+
+  function badgeForLevel(element, level, score) {
+    element.className = 'badge';
+    if (level === 'risk') { element.classList.add('badge-risk'); element.textContent = `위험 · ${score.toFixed(0)}점`; }
+    else if (level === 'caution') { element.classList.add('badge-caution'); element.textContent = `주의 · ${score.toFixed(0)}점`; }
+    else if (level === 'normal') { element.classList.add('badge-normal'); element.textContent = `정상 · ${score.toFixed(0)}점`; }
+    else { element.classList.add('badge-muted'); element.textContent = '데이터 수집 중'; }
+  }
+
+  function setCircle(circleId, scoreId, score) {
+    const circle = document.getElementById(circleId);
+    const value = document.getElementById(scoreId);
+    if (!Number.isFinite(score)) {
+      value.textContent = '-';
+      circle.style.background = 'conic-gradient(#e8ecf4 0deg, #e8ecf4 0deg)';
+      return;
+    }
+    value.textContent = score.toFixed(0);
+    circle.style.background = `conic-gradient(var(--primary) ${score*3.6}deg, #e8ecf4 0deg)`;
+  }
+
+  function fixedGuidanceKey(fixedLabel) {
+    if (fixedLabel === '위험') return 'high';
+    if (fixedLabel === '주의') return 'medium';
+    return 'low';
+  }
+
+  function fixedGuidanceLabel(fixedLabel) {
+    const key = fixedGuidanceKey(fixedLabel);
+    return key === 'high' ? '높음' : key === 'medium' ? '중간' : '낮음';
+  }
+
+  function changeGuidanceKey(score) {
+    if (!Number.isFinite(score)) return null;
+    if (score >= 70) return 'observe';
+    if (score >= 40) return 'caution';
+    return 'stable';
+  }
+
+  function changeGuidanceLabel(score) {
+    const key = changeGuidanceKey(score);
+    if (key === 'observe') return '집중관찰 · 70~100점';
+    if (key === 'caution') return '주의 · 40~69점';
+    if (key === 'stable') return '안정 · 0~39점';
+    return '데이터 수집 중';
+  }
+
+  function renderGuardianGuidance(r) {
+    const card = document.getElementById('guardianGuidanceCard');
+    const badge = document.getElementById('guardianGuidanceBadge');
+    const scoreEl = document.getElementById('guidanceChangeScore');
+    const changeLevelEl = document.getElementById('guidanceChangeLevel');
+    const fixedLevelEl = document.getElementById('guidanceFixedLevel');
+    const fixedDetailEl = document.getElementById('guidanceFixedDetail');
+    const messageEl = document.getElementById('guardianGuidanceMessage');
+    if (!card || !badge || !scoreEl || !changeLevelEl || !fixedLevelEl || !fixedDetailEl || !messageEl) return;
+
+    const fixed = state.profileLabels?.fixed || '정상';
+    const fixedKey = fixedGuidanceKey(fixed);
+    const fixedLevel = fixedGuidanceLabel(fixed);
+    fixedLevelEl.textContent = fixedLevel;
+    fixedDetailEl.textContent = `사용자 기능 체크리스트 기준 · 고정 취약도 ${fixed}`;
+
+    card.classList.remove('tone-normal', 'tone-caution', 'tone-risk');
+    badge.className = 'badge badge-muted';
+    messageEl.className = 'guidance-message muted';
+
+    if (!Number.isFinite(r.change)) {
+      scoreEl.textContent = '-';
+      changeLevelEl.textContent = '직전 7일 기준선과 현재일 데이터가 모이면 자동 판정됩니다.';
+      badge.textContent = '데이터 수집 중';
+      messageEl.innerHTML = '<strong>판정 대기</strong>변동지표 계산에 필요한 데이터가 모이면 고정지표와 조합해 9가지 상황별 안내 문구를 자동으로 표시합니다.';
+      return;
+    }
+
+    const changeKey = changeGuidanceKey(r.change);
+    const guide = GUARDIAN_GUIDANCE_MESSAGES[changeKey][fixedKey];
+    scoreEl.textContent = r.change.toFixed(0);
+    changeLevelEl.textContent = changeGuidanceLabel(r.change);
+    badge.textContent = guide.title;
+
+    if (changeKey === 'observe') {
+      card.classList.add('tone-risk');
+      badge.className = 'badge badge-risk';
+      messageEl.className = 'guidance-message risk';
+    } else if (changeKey === 'caution' || fixedKey !== 'low') {
+      card.classList.add('tone-caution');
+      badge.className = 'badge badge-caution';
+      messageEl.className = 'guidance-message caution';
+    } else {
+      card.classList.add('tone-normal');
+      badge.className = 'badge badge-normal';
+      messageEl.className = 'guidance-message normal';
+    }
+
+    messageEl.innerHTML = `<strong>${guide.title}</strong>${guide.message}`;
+  }
+
+  function renderRisk() {
+    calculateProfileLabels();
+    const r = state.riskResult || clone(defaultState.riskResult);
+    const ind = r.indicators || {};
+    setCircle('presentScoreCircle', 'presentScore', r.present);
+    setCircle('changeScoreCircle', 'changeScore', r.change);
+    badgeForLevel(document.getElementById('presentBadge'), r.presentLevel, Number(r.present || 0));
+    badgeForLevel(document.getElementById('changeBadge'), r.changeLevel, Number(r.change || 0));
+
+    document.getElementById('indicatorR7').textContent = Number.isFinite(ind.R7) ? `${(ind.R7*100).toFixed(1)}%` : '-';
+    document.getElementById('indicatorF7').textContent = Number.isFinite(ind.F7) ? `${(ind.F7*100).toFixed(1)}%` : '-';
+    document.getElementById('indicatorMt').textContent = Number.isFinite(ind.Mt) ? `${(ind.Mt*100).toFixed(1)}%` : '-';
+    const unit = r.unit || '초';
+    document.getElementById('indicatorLt').textContent = Number.isFinite(ind.Lt) ? `${ind.Lt.toFixed(2)} ${unit}` : '-';
+    document.getElementById('indicatorMuL').textContent = Number.isFinite(ind.muL) ? `${ind.muL.toFixed(2)} ${unit}` : '-';
+    document.getElementById('indicatorSigmaL').textContent = Number.isFinite(ind.sigmaL) ? `${ind.sigmaL.toFixed(2)} ${unit}` : '-';
+    document.getElementById('indicatorDelta').textContent = Number.isFinite(ind.delta) ? `${ind.delta.toFixed(2)} ${unit}` : '-';
+
+    const presentSummary = document.getElementById('presentSummary');
+    const presentDetail = document.getElementById('presentDetail');
+    if (Number.isFinite(r.present)) {
+      presentSummary.textContent = r.presentLevel === 'risk' ? '최근 복약관리에서 높은 미수령 위험이 확인되었습니다.' : r.presentLevel === 'caution' ? '최근 복약관리에서 주의가 필요한 미수령 패턴이 있습니다.' : '최근 복약관리는 정상 범위입니다.';
+      presentDetail.textContent = `R7 ${(ind.R7*100).toFixed(1)}% · F7 ${(ind.F7*100).toFixed(1)}% · Mt ${(ind.Mt*100).toFixed(1)}% 중 최댓값을 적용했습니다.`;
+    } else {
+      presentSummary.textContent = '최근 7일 기록이 필요합니다.';
+      presentDetail.textContent = '완료된 복약 일자가 7일 누적되면 자동 계산됩니다.';
+    }
+
+    const changeSummary = document.getElementById('changeSummary');
+    const changeDetail = document.getElementById('changeDetail');
+    if (Number.isFinite(r.change)) {
+      changeSummary.textContent = r.changeLevel === 'risk' ? '개인의 평소 반응시간에서 큰 지연 변화가 감지되었습니다.' : r.changeLevel === 'caution' ? '평소보다 반응시간이 느려지는 변화가 감지되었습니다.' : '현재 반응시간은 개인 기준선 범위입니다.';
+      changeDetail.textContent = `Lt ${ind.Lt.toFixed(2)} ${unit} · μL ${ind.muL.toFixed(2)} ${unit} · σL ${ind.sigmaL.toFixed(2)} ${unit} · Δ ${ind.delta.toFixed(2)} ${unit}`;
+    } else {
+      changeSummary.textContent = '직전 7일 + 현재일 기록이 필요합니다.';
+      changeDetail.textContent = '8번째 완료일부터 현재 반응시간을 직전 7일 개인 기준선과 비교합니다. 현재일에 버튼 반응이 전혀 없으면 P_change는 계산하지 않고 P_present의 미수령 지표로 반영합니다.';
+    }
+
+    const fixed = state.profileLabels?.fixed || '정상';
+    const fixedDisplay = fixedGuidanceLabel(fixed);
+    const complexity = state.profileLabels?.complexity || '하';
+    const fixedEls = [document.getElementById('fixedVulnerabilityBadge'), document.getElementById('settingsFixedBadge')].filter(Boolean);
+    fixedEls.forEach(el => { el.className = `badge ${fixed === '위험' ? 'badge-risk' : fixed === '주의' ? 'badge-caution' : 'badge-normal'}`; el.textContent = fixedDisplay; });
+    const compEls = [document.getElementById('complexityBadge'), document.getElementById('settingsComplexityBadge')].filter(Boolean);
+    compEls.forEach(el => { el.className = 'badge badge-info'; el.textContent = complexity; });
+    const area = state.profileLabels?.areas || {};
+    const detailEl = document.getElementById('fixedVulnerabilityDetail');
+    if (detailEl) detailEl.textContent = `인지·복약관리 ${area.cognitive || '정상'} · 거동·손 사용 ${area.mobility || '정상'} · 시청각·의사소통 ${area.sensory || '정상'} · 보호자 접근성 ${area.guardian || '정상'} → 고정지표 ${fixedDisplay}`;
+    renderGuardianGuidance(r);
+  }
+
+
+  function renderErrorState() {
+    const box = document.getElementById('errorStateBox');
+    if (!box) return;
+    const success = document.getElementById('retrySuccessBtn');
+    const fail = document.getElementById('retryFailBtn');
+    if (state.errorSimulation?.pending) {
+      box.textContent = `${state.errorSimulation.label} 감지 · 자동복구 1회 결과를 선택하세요.`;
+      success.disabled = false; fail.disabled = false;
+    } else {
+      box.textContent = '현재 오류가 없습니다.';
+      success.disabled = true; fail.disabled = true;
+    }
+  }
+
+  function renderSettings() {
+    document.getElementById('onTimeLimit').value = state.settings.onTimeLimit;
+    document.getElementById('missedLimit').value = state.settings.missedLimit;
+    calculateProfileLabels();
+    document.getElementById('databaseUrl').value = state.settings.firebase.databaseUrl || '';
+    document.getElementById('deviceId').value = state.settings.firebase.deviceId || 'barrierzero-01';
+    renderSchedule();
+    renderCloudStatus();
+  }
+
+  function renderAll() {
+    renderSession();
+    renderLogs();
+    renderGuardian();
+    renderRisk();
+    renderReactionTrend();
+    renderErrorState();
+    renderSettings();
+  }
+
+  function quickScenario(type) {
+    startSession();
+    setTimeout(() => {
+      requestDispense();
+      setTimeout(() => {
+        if (type === 'onTime') {
+          setElapsed(Math.min(8, state.settings.onTimeLimit));
+          confirmReceive();
+        } else if (type === 'late') {
+          setElapsed(Math.max(state.settings.onTimeLimit + 10, 30));
+          confirmReceive();
+        } else if (type === 'missed') {
+          setElapsed(state.settings.missedLimit);
+        } else if (type === 'duplicate') {
+          requestDispense();
+          setTimeout(requestDispense, 150);
+        }
+      }, 900);
+    }, 100);
+  }
+
+  function exportData() {
+    const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'yakson_mvp_data.json'; a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function resetAll() {
+    if (!confirm('저장된 모든 MVP 데이터를 초기화할까요?')) return;
+    state = clone(defaultState);
+    saveState();
+    renderChecklist();
+    renderBaseline();
+    renderAll();
+    addLog('전체 데이터가 초기화되었습니다.', 'info');
+  }
+
+  document.querySelectorAll('.nav-btn').forEach(btn => btn.addEventListener('click', () => {
+    document.querySelectorAll('.nav-btn').forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(x => x.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.page).classList.add('active');
+  }));
+
+  document.getElementById('saveScheduleBtn').addEventListener('click', saveSchedule);
+  document.getElementById('refreshDeviceBtn').addEventListener('click', () => pollDeviceState(true));
+  document.getElementById('saveCloudBtn').addEventListener('click', saveCloudSettings);
+  document.getElementById('testCloudBtn').addEventListener('click', testCloudConnection);
+  document.getElementById('loadEsp32MetricsBtn').addEventListener('click', loadEsp32Metrics);
+  document.getElementById('trendLatestBtn')?.addEventListener('click', () => {
+    const series = buildTrendSeries();
+    if (series.length) {
+      selectedTrendDay = series[series.length - 1].day;
+      renderReactionTrend();
+      const scrollBox = document.getElementById('reactionTrendScroll');
+      if (scrollBox) scrollBox.scrollLeft = scrollBox.scrollWidth;
+    }
+  });
+  document.getElementById('saveLimitsBtn').addEventListener('click', () => {
+    const on = Number(document.getElementById('onTimeLimit').value);
+    const miss = Number(document.getElementById('missedLimit').value);
+    if (!(on > 0 && miss > on)) return alert('미수령 기준은 정시 기준보다 커야 합니다.');
+    state.settings.onTimeLimit = on;
+    state.settings.missedLimit = miss;
+    saveState(); renderAll(); addLog('복약 판정 기준을 저장했습니다.', 'info');
+    if (cloudConfigured()) syncScheduleToCloud(false);
+  });
+  document.getElementById('saveChecklistBtn').addEventListener('click', () => {
+    document.querySelectorAll('[data-check-key]').forEach(select => state.checklist[select.dataset.checkKey] = Number(select.value));
+    const labels = calculateProfileLabels();
+    renderChecklist(); renderAll();
+    addLog(`사용자 특성 라벨 저장: 고정 취약도 ${labels.fixed} · 복약 복잡도 ${labels.complexity}`, 'info');
+  });
+  document.getElementById('approveRetryBtn').addEventListener('click', () => approveRetry(true));
+  document.getElementById('rejectRetryBtn').addEventListener('click', () => approveRetry(false));
+
+  setInterval(() => {
+    document.getElementById('clockText').textContent = nowText();
+    document.getElementById('dateText').textContent = dateText();
+  }, 1000);
+
+  setInterval(() => {
+    if (cloudConfigured()) pollDeviceState(false);
+  }, DEVICE_POLL_MS);
+
+  renderChecklist();
+  renderBaseline();
+  renderAll();
+  loadEsp32Metrics(true);
+  setInterval(renderSession, 1000);
+  document.getElementById('clockText').textContent = nowText();
+  document.getElementById('dateText').textContent = dateText();
+  if (cloudConfigured()) {
+    startRealtimeEventStream();
+    pollDeviceState(false);
+  } else {
+    setTrendRealtimeBadge('off');
+  }
+
+  window.addEventListener('beforeunload', stopRealtimeEventStream);
+})();
+</script>
+</body>
+</html>
